@@ -1,4 +1,4 @@
-name: Build IPK
+name: Build IPK & APK
 
 on:
   push:
@@ -8,21 +8,28 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # 👇 开启矩阵模式！
+    strategy:
+      matrix:
+        # 定义两个目标版本：一个是 23.05.5(产出ipk)，一个是 snapshot(产出apk)
+        sdk_version: [ "x86_64-23.05.5", "x86_64-snapshot" ]
+        
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Build LuCI ipk
+      - name: Build LuCI package
         uses: sbwml/openwrt-gh-action-sdk@main   
         env:
-          ARCH: x86_64-23.05.5
-          FEEDNAME: custom
+          # 👇 这里的版本号变成了动态变量！每次循环带入一个版本
+          ARCH: ${{ matrix.sdk_version }}
           PACKAGES: luci-app-netwiz
           NO_REFRESH_CHECK: true
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: luci-app-netwiz
-          path: bin/packages/*/*/luci-app-netwiz*.ipk
+          # 👇 给打包出来的文件动态命名，防止互相覆盖
+          name: luci-app-netwiz-${{ matrix.sdk_version }}
+          path: bin/packages/*/*/luci-app-netwiz*.*pk
           compression-level: 0
