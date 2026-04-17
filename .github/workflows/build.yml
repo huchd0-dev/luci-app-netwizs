@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4    # 升级到 v4
 
       - name: Build LuCI ipk
         uses: sbwml/openwrt-gh-action-sdk@master
@@ -21,8 +21,8 @@ jobs:
           NO_REFRESH_CHECK: true
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4   # 升级到 v4 适配新规
         with:
           name: luci-app-netwiz
           path: bin/packages/*/packages/luci-app-netwiz*.ipk
-          compression-level: 0 # v4 建议加上的参数，ipk 已经是压缩包，无需再次压缩
+          compression-level: 0 # v4 的新特性：ipk 已经是压缩包，设置为 0 节省打包时间
