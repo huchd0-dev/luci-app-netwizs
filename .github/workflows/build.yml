@@ -1,24 +1,12 @@
-name: Build IPK & APK
+name: luci-app-netwiz Build IPK & APK (一键安装版)
 
 on:
-  push:
-    tags: [ "v*" ]
-  
-  # 👇 定制化你的“发版表单”
   workflow_dispatch:
     inputs:
-      version:
-        description: '📌 发布版本号 (例如: v1.0.3)'
-        required: true
-        default: 'v1.0.3'
-      advantages:
-        description: '✨ 核心优势'
+      highlights:
+        description: '✨ OpenWrt/ImmortalWrt/iStoreOS一键安装版'
         required: false
-        default: '开箱即用，「纯净·安全·零破坏」的网络配置向导，化繁为简，实现一键化配置与最小干预部署。'
-      instructions:
-        description: '📖 软件操作说明'
-        required: false
-        default: '下载对应系统的安装包，传至路由器 /tmp 目录后，使用 opkg 或 apk 命令进行安装。安装后重启 rpcd 服务即可在菜单中看到 NetWiz。'
+        default: '常规维护与稳定性更新。'
 
 jobs:
   build:
@@ -41,29 +29,39 @@ jobs:
           PACKAGES: luci-app-netwiz
           NO_REFRESH_CHECK: true
 
+      - name: Prepare Fixed-Name Packages
+        run: |
+          mkdir -p release_pkgs
+          # 👇 化繁为简，只保留最纯粹的包名
+          find bin/ -name "luci-app-netwiz*.ipk" -exec cp {} release_pkgs/luci-app-netwiz.ipk \;
+          find bin/ -name "luci-app-netwiz*.apk" -exec cp {} release_pkgs/luci-app-netwiz.apk \;
+
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: luci-app-netwiz-${{ matrix.sdk_version }}
-          path: bin/packages/*/*/luci-app-netwiz*.*pk
+          path: release_pkgs/*
           compression-level: 0 
 
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
         with:
-          tag_name: ${{ github.event.inputs.version || github.ref_name }}
-          # 👇 自动排版魔法：把你的输入自动组合成高颜值的排版
+          tag_name: latest
+          name: NetWiz 最新极速安装版
           body: |
-            ### ✨ 核心优势
-            ${{ github.event.inputs.advantages || '提供纯净、稳定、极简的网络配置体验。' }}
-            
-            ### 📖 软件操作说明
-            ${{ github.event.inputs.instructions || '请下载下方对应的 .ipk 或 .apk 安装包进行部署。' }}
+            ### ✨ 最新版发布
+            ${{ github.event.inputs.highlights || '持续优化与稳定性更新。' }}
             
             ---
-            *📦 支持 OpenWrt 23.05 (ipk) 与 25.x (apk) 全架构跨版本安装。*
+            
+            ### 🚀 全平台一键极速安装
+            无论你的路由器是 OpenWrt/ImmortalWrt/iStoreOS 23.05 (老版) 还是 25.x (新版)，请使用 SSH 登录路由器终端，**直接复制并运行下方这一行代码**。
+            它会自动识别您的系统版本，并自动下载对应格式的安装包完成部署：
+            
+            ```bash
+            wget -qO- [https://raw.githubusercontent.com/$](https://raw.githubusercontent.com/$){{ github.repository }}/master/install.sh | sh
+            ```
           files: |
-            bin/**/luci-app-netwiz*.ipk
-            bin/**/luci-app-netwiz*.apk
+            release_pkgs/luci-app-netwiz.ipk
+            release_pkgs/luci-app-netwiz.apk
           generate_release_notes: false
