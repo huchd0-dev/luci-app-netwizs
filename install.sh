@@ -1,32 +1,42 @@
 #!/bin/sh
-# NetWiz 一键安装脚本
+# NetWiz 全自动一键安装脚本
 
-echo -e "\033[36m[NetWiz]\033[0m 正在启动网络向导一键安装..."
+echo "========================================="
+echo "   正在开始安装 NetWiz 网络向导..."
+echo "========================================="
 
-# 发布在 release 的 v1.0.0 版本下
-IPK_URL="https://github.com/你的GitHub用户名/luci-app-netwiz/releases/download/v1.0.0/luci-app-netwiz_1.0.0-1_all.ipk"
-TMP_FILE="/tmp/netwiz.ipk"
+# 你的 GitHub 仓库名
+REPO="huchd0/luci-app-netwiz"
 
-echo ">> 正在从 GitHub 下载最新版本..."
-wget -qO $TMP_FILE $IPK_URL
+# 智能判断包管理器：优先检测有没有 apk (代表是新系统)
+if command -v apk >/dev/null 2>&1; then
+    echo "[检测结果] 当前系统为 OpenWrt 25.x 或更高版本 (apk)"
+    echo "📥 正在拉取最新版 .apk 安装包..."
+    wget -qO /tmp/luci-app-netwiz.apk "https://github.com/${REPO}/releases/download/latest/luci-app-netwiz.apk"
+    
+    echo "📦 正在执行免检安装..."
+    apk add --allow-untrusted /tmp/luci-app-netwiz.apk
 
-if [ ! -f "$TMP_FILE" ]; then
-    echo -e "\033[31m[错误]\033[0m 下载失败，请检查网络或链接是否正确！"
+# 如果没有 apk，检测有没有 opkg (代表是老系统)
+elif command -v opkg >/dev/null 2>&1; then
+    echo "[检测结果] 当前系统为 OpenWrt 23.05 或更早版本 (opkg)"
+    echo "📥 正在拉取最新版 .ipk 安装包..."
+    wget -qO /tmp/luci-app-netwiz.ipk "https://github.com/${REPO}/releases/download/latest/luci-app-netwiz.ipk"
+    
+    echo "📦 正在执行常规安装..."
+    opkg install /tmp/luci-app-netwiz.ipk
+
+# 都不符合，直接报错拦截
+else
+    echo "❌ 错误: 未知系统环境，找不到 apk 或 opkg 命令！"
     exit 1
 fi
 
-echo ">> 正在安全安装包..."
-opkg update > /dev/null 2>&1
-opkg install $TMP_FILE
-
-# 赋予后端脚本执行权限
-chmod +x /usr/libexec/rpcd/netwiz
-
-echo ">> 正在清理缓存并重启服务..."
-rm -f $TMP_FILE
-rm -rf /tmp/luci-indexcache*
-rm -rf /tmp/luci-modulecache/
+# 安装成功的收尾工作
+echo "🧹 正在清理系统界面缓存..."
+rm -f /tmp/luci-indexcache /tmp/luci-modulecache/*
 /etc/init.d/rpcd restart
 
-echo -e "\033[32m[安装完成!]\033[0m"
-echo "请刷新路由器后台网页，在【系统】菜单下即可体验 NetWiz 网络向导。"
+echo "========================================="
+echo " 🎉 NetWiz 安装成功！请刷新浏览器界面。"
+echo "========================================="
