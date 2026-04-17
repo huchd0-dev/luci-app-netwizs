@@ -2,7 +2,7 @@ name: Build IPK
 
 on:
   push:
-    branches: [ "main", "master" ]
+    branches: [ "master", "main" ]   # 👈 这里监听你自己的 master 或 main 分支
     tags: [ "v*" ]
 
 jobs:
@@ -10,10 +10,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4    # 升级到 v4
+        uses: actions/checkout@v4
 
       - name: Build LuCI ipk
-        uses: sbwml/openwrt-gh-action-sdk@master
+        uses: sbwml/openwrt-gh-action-sdk@main
         env:
           ARCH: x86_64-23.05
           FEEDNAME: packages
@@ -21,8 +21,8 @@ jobs:
           NO_REFRESH_CHECK: true
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v4   # 升级到 v4 适配新规
+        uses: actions/upload-artifact@v4
         with:
           name: luci-app-netwiz
           path: bin/packages/*/packages/luci-app-netwiz*.ipk
-          compression-level: 0 # v4 的新特性：ipk 已经是压缩包，设置为 0 节省打包时间
+          compression-level: 0
