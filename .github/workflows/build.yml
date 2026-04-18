@@ -6,7 +6,7 @@ on:
       highlights:
         description: '✨ OpenWrt/ImmortalWrt一键安装版更新说明'
         required: false
-        default: '常规维护与稳定性更新。'
+        default: '常规维护与稳定性更新v'
 
 jobs:
   # 多架构并行编译
