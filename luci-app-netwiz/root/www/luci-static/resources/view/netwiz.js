@@ -193,7 +193,7 @@ return view.extend({
         var modeTextEl = container.querySelector('#current-mode-text');
         var selectedMode = '';
 
-        // 💡 核心：OTA 在线更新检测逻辑
+        // 💡 改進版：文本智能清洗與智能輪詢探測更新
         function checkUpdate() {
             fetch('https://api.github.com/repos/huchd0/luci-app-netwiz/releases/latest')
                 .then(function(res) { return res.json(); })
@@ -202,26 +202,49 @@ return view.extend({
                     if (latestVer && latestVer !== CURRENT_VERSION && latestVer.indexOf('v') === 0) {
                         var badge = container.querySelector('#nw-update-badge');
                         var verSpan = container.querySelector('#nw-new-ver');
+                        
+                        // 💡 文本清洗：砍掉下半截安裝指令代碼，只保留亮點說明
+                        var rawText = data.body || '';
+                        var cleanText = rawText.split('---')[0].replace(/### ✨ 最新版发布/g, '').trim();
+                        if (!cleanText) cleanText = '常規穩定性更新與最佳化。';
+
                         if (badge && verSpan) {
                             verSpan.innerText = latestVer;
                             badge.style.display = 'inline-block';
                             
                             badge.addEventListener('click', function() {
                                 openModal({
-                                    title: '✨ 发现新版本 ' + latestVer,
-                                    msg: '<b>更新内容：</b><div style="text-align:left; font-size:13px; background:#f1f5f9; padding:10px; margin-top:10px; border-radius:6px; max-height:150px; overflow-y:auto; border:1px solid #cbd5e1;">' + (data.body || '常规稳定性更新').replace(/\n/g, '<br>') + '</div><br>是否立即在后台静默升级？',
-                                    okText: '立即升级',
-                                    cancelText: '暂不更新',
+                                    title: '✨ 發現新版本 ' + latestVer,
+                                    msg: '<b>更新亮點：</b><div style="text-align:left; font-size:13px; background:#f1f5f9; padding:10px; margin-top:10px; border-radius:6px; max-height:150px; overflow-y:auto; border:1px solid #cbd5e1;">' + cleanText.replace(/\n/g, '<br>') + '</div><br>是否立即在後台靜默升級？',
+                                    okText: '立即升級',
+                                    cancelText: '暫不更新',
                                     onOk: function() {
                                         openModal({
-                                            title: '🚀 正在自动升级', 
-                                            msg: '正在从云端下载并安装最新版本，请勿关闭路由器电源...<br><br><span style="font-size:13px; color:#666;">(大约需要 30~45 秒，完成后网页将自动刷新)</span>', 
-                                            spin: true
+                                            title: '🚀 正在全自動升級', 
+                                            msg: '正在從雲端拉取並部署新版本，請勿斷開路由器電源...<br><br><div class="nw-spinner" style="margin-top:20px; width:30px; height:30px;"></div><span style="font-size:13px; color:#666;">系統正在智能偵測更新進度，完成後將自動重新整理...</span>', 
+                                            spin: false // 這裡用客製化的spinner所以關閉預設
                                         });
-                                        callUpdate().then(function(){
-                                            setTimeout(function(){ location.reload(); }, 35000);
-                                        }).catch(function(){
-                                            setTimeout(function(){ location.reload(); }, 35000);
+                                        
+                                        // 觸發底層獨立升級指令碼
+                                        callUpdate().then(function() {
+                                            // 💡 智能心跳輪詢：等待 15 秒（讓路由器處理下載和重啟服務），然後每 3 秒探活一次
+                                            setTimeout(function() {
+                                                var pollTimer = setInterval(function() {
+                                                    // 向當前頁面發 HEAD 請求，加上時間戳防快取
+                                                    fetch(window.location.href.split('#')[0] + '?t=' + Date.now(), { method: 'HEAD', cache: 'no-store' })
+                                                        .then(function(res) {
+                                                            if (res.ok) {
+                                                                clearInterval(pollTimer);
+                                                                location.reload(true); // 發現路由器已甦醒，瞬間強制重新整理
+                                                            }
+                                                        }).catch(function(e) {
+                                                            // Catch 錯誤是正常的，說明服務還在重啟中，繼續等
+                                                        });
+                                                }, 3000);
+                                            }, 15000);
+                                        }).catch(function() {
+                                            // RPC 若瞬間斷開，啟用備用強制重新整理
+                                            setTimeout(function(){ location.reload(true); }, 40000);
                                         });
                                     }
                                 });
@@ -231,7 +254,7 @@ return view.extend({
                 }).catch(function(e) { console.log('OTA Check failed', e); });
         }
         
-        // 页面渲染完毕后，偷偷检查一次更新
+        // 頁面渲染完畢後，偷偷檢查一次更新
         setTimeout(checkUpdate, 1500);
 
         function updateStatusDisplay() {
