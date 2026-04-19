@@ -87,7 +87,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.build.outputs.final_version }}
-          name: NetWiz ${{ needs.build.outputs.final_version }} 全新安装版
+          name: NetWiz ${{ needs.build.outputs.final_version }} 最新安装版
           body: |
             ### ✨ 最新版发布
             ${{ github.event.inputs.highlights }}
