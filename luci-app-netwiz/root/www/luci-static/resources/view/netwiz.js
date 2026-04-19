@@ -204,11 +204,16 @@ return view.extend({
             return 0;
         }
 
+        // 💡 极简版静默探测器：加入了【防缓存】和【限流提示】
         function doUpdateCheck() {
             var badge = container.querySelector('#nw-update-badge');
 
-            fetch('https://api.github.com/repos/huchd0/luci-app-netwiz/releases')
-                .then(function(res) { return res.json(); })
+            // 💡 关键修复：URL 后面加上 ?t=时间戳，彻底打破浏览器缓存！
+            fetch('https://api.github.com/repos/huchd0/luci-app-netwiz/releases?t=' + Date.now(), { cache: 'no-store' })
+                .then(function(res) { 
+                    if (!res.ok) throw new Error('API Request Failed: ' + res.status);
+                    return res.json(); 
+                })
                 .then(function(data) {
                     if (data && data.length > 0) {
                         var latestVer = data[0].tag_name;
@@ -256,7 +261,6 @@ return view.extend({
                                                     spin: false 
                                                 });
                                                 
-                                                // 💡 改进版：带有超时保险的升级防卡死机制
                                                 var updateStarted = false;
                                                 var beginPolling = function() {
                                                     if (updateStarted) return;
@@ -275,8 +279,6 @@ return view.extend({
                                                 };
 
                                                 callUpdate().then(beginPolling).catch(beginPolling);
-                                                
-                                                // 强制防死锁保障：5秒后无脑进入探活模式
                                                 setTimeout(beginPolling, 5000);
                                             }
                                         }
@@ -285,7 +287,10 @@ return view.extend({
                             }
                         }
                     }
-                }).catch(function(e) { console.log('OTA Check failed', e); });
+                }).catch(function(e) { 
+                    // 如果被 GitHub 限流了，会在浏览器 F12 控制台里打出明确警告
+                    console.error('OTA Check failed! (可能是 API 超过一小时 60 次限制，或者网络被墙):', e); 
+                });
         }
         
         setTimeout(doUpdateCheck, 1500);
