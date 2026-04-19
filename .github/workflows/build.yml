@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: '🔖 版本号 (保持 auto 将自动读取上一版并 +0.0.1)'
+        description: '🔖 版本号 (保持 Auto 将自动读取上一版并 +0.0.1)'
         required: true
-        default: 'auto'
+        default: 'Auto'
       highlights:
         description: '✨ 更新说明 (支持 Markdown)'
         required: false
@@ -29,7 +29,7 @@ jobs:
         id: calc_version
         run: |
           INPUT_VER="${{ github.event.inputs.version }}"
-          if [ "$INPUT_VER" = "auto" ]; then
+          if [ "$INPUT_VER" = "Auto" ]; then
             LATEST_TAG=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
             if [ -z "$LATEST_TAG" ] || [ "$LATEST_TAG" = "null" ]; then
               NEW_VER="v1.0.0"
@@ -87,7 +87,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.build.outputs.final_version }}
-          name: NetWiz ${{ needs.build.outputs.final_version }} 极速安装版
+          name: NetWiz ${{ needs.build.outputs.final_version }} 全新安装版
           body: |
             ### ✨ 最新版发布
             ${{ github.event.inputs.highlights }}
