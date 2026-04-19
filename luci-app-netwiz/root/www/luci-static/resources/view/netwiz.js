@@ -7,17 +7,13 @@
 
 var CURRENT_VERSION = 'v1.0.0';
 
+// 仅保留这一个全能通道！
 var callNetSetup = rpc.declare({
     object: 'netwiz',
     method: 'set_network',
     params: ['mode', 'arg1', 'arg2', 'arg3', 'arg4'],
     expect: { result: 0 }
 });
-
-// 💡 声明三个全新的智能无缝更新接口
-var callPrepareUpdate = rpc.declare({ object: 'netwiz', method: 'prepare_update', expect: { result: 0 } });
-var callCheckStatus = rpc.declare({ object: 'netwiz', method: 'check_update_status', expect: { ready: 0 } });
-var callDoInstall = rpc.declare({ object: 'netwiz', method: 'do_install', expect: { result: 0 } });
 
 return view.extend({
     render: function () {
@@ -220,7 +216,6 @@ return view.extend({
                             var cleanText = rawText.split('---')[0].replace(/### ✨ 最新版发布/g, '').trim();
                             if (!cleanText) cleanText = '常规稳定性更新与优化。';
 
-                            // 💡 核心逻辑：定义显示更新按钮及安装弹窗
                             var showReadyBadge = function() {
                                 badge.className = 'nw-badge-new';
                                 badge.innerText = '🚀 发现新版本 ' + latestVer;
@@ -231,7 +226,6 @@ return view.extend({
                                 badge = newBadge;
 
                                 badge.addEventListener('click', function() {
-                                    // 💡 极简弹窗：不再有任何单选框，因为安装包已经在本地躺好了！
                                     var msgHtml = '<b>✨ 新版本安装包已在后台悄悄准备就绪！</b><br><br><b>更新亮点：</b><div style="text-align:left; font-size:13px; background:#f1f5f9; padding:10px; margin-top:10px; border-radius:6px; max-height:150px; overflow-y:auto; border:1px solid #cbd5e1;">' + cleanText.replace(/\n/g, '<br>') + '</div>';
 
                                     openModal({
@@ -246,8 +240,8 @@ return view.extend({
                                                 spin: false 
                                             });
                                             
-                                            // 💡 触发本地无缝安装，并设置刷新倒计时
-                                            callDoInstall().then(function() {
+                                            // 💡 魔法暗号：do_install
+                                            callNetSetup('do_install').then(function() {
                                                 setTimeout(function() { location.reload(true); }, 7000); 
                                             }).catch(function() {
                                                 setTimeout(function() { location.reload(true); }, 7000);
@@ -257,18 +251,18 @@ return view.extend({
                                 });
                             };
 
-                            // 💡 无缝热更新状态机：先查状态，没下载就触发下载，下载完再显示火箭
-                            callCheckStatus().then(function(res) {
+                            // 💡 魔法暗号：check_update
+                            callNetSetup('check_update').then(function(res) {
                                 if (res === 1) {
-                                    showReadyBadge(); // 之前已经下载好了，直接现身
+                                    showReadyBadge(); 
                                 } else {
-                                    callPrepareUpdate(); // 告诉底层：偷偷去下载吧
-                                    // 开始查岗，每 4 秒问一次下载完了没
+                                    // 💡 魔法暗号：prepare_update
+                                    callNetSetup('prepare_update'); 
                                     var pollStatus = setInterval(function() {
-                                        callCheckStatus().then(function(r) {
+                                        callNetSetup('check_update').then(function(r) {
                                             if (r === 1) {
                                                 clearInterval(pollStatus);
-                                                showReadyBadge(); // 下好了！突然现身
+                                                showReadyBadge();
                                             }
                                         }).catch(function(){});
                                     }, 4000);
