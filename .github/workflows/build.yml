@@ -108,9 +108,18 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "正在清理历史发布版本，保持主页极简..."
-          # 获取所有 release 列表，剔除刚刚发布的最新版，然后将剩下的旧版本全部永久删除！
-          TAGS_TO_DELETE=$(gh release list --limit 100 | awk '{print $1}' | sed '1d')
+          # 强制等待 3 秒
+          sleep 3
+          
+          # 明确排除当前正在发布的这个版本号
+          CURRENT_TAG="${{ needs.build.outputs.final_version }}"
+          
+          # 获取所有 Tag，并过滤掉当前版本
+          TAGS_TO_DELETE=$(gh release list --limit 100 | awk '{print $1}' | grep -v "$CURRENT_TAG")
+          
           for tag in $TAGS_TO_DELETE; do
-            echo "正在删除旧版本: $tag"
-            gh release delete "$tag" --cleanup-tag -y || true
+            if [ -n "$tag" ]; then
+              echo "正在删除旧版本: $tag"
+              gh release delete "$tag" --cleanup-tag -y || true
+            fi
           done
