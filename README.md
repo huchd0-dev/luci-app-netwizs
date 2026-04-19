@@ -16,17 +16,6 @@
 
 ---
 
-## 📸 界面预览
-<img width="600" alt="Image" src="https://github.com/user-attachments/assets/1b58d43e-861b-4d21-84c7-21b01f0e066f" />
-<img width="600" alt="Image" src="https://github.com/user-attachments/assets/965c533e-d0ea-4133-899f-f5ad4aacb279" />
-<img width="600" alt="Image" src="https://github.com/user-attachments/assets/84047484-7a63-4f6d-b38e-ed2c10008fa3" />
-<img width="600" alt="Image" src="https://github.com/user-attachments/assets/d7bdcc3f-3771-4c4d-88da-05ce49af98c2" />
-<img width="600" alt="Image" src="https://github.com/user-attachments/assets/31c47e9e-3f45-41ef-b3a2-10515b3d631b" />
-<img width="600" alt="Image" src="https://github.com/user-attachments/assets/4a7213c9-76ad-4cf0-8b34-6755d87c2e20" />
-<img width="600" alt="Image" src="https://github.com/user-attachments/assets/5ea50518-1f03-4047-b318-a6ef9955590c" />
-
----
-
 ## 🚀 极速安装 (推荐)
 
 我们提供了一键智能安装脚本。无论你是老系统还是新系统，只需在 SSH 终端中直接复制并执行以下单行命令，即可自动完成 **【判断系统架构 -> 下载对应格式 -> 安装 -> 修复权限与清理缓存】** 的全流程：
@@ -39,6 +28,17 @@ wget -qO- https://raw.githubusercontent.com/huchd0/luci-app-netwiz/master/instal
 ```bash
 wget -qO- https://ghproxy.net/https://raw.githubusercontent.com/huchd0/luci-app-netwiz/master/install.sh | sh
 ```
+
+---
+
+## 📸 界面预览
+<img width="600" alt="Image" src="https://github.com/user-attachments/assets/1b58d43e-861b-4d21-84c7-21b01f0e066f" />
+<img width="600" alt="Image" src="https://github.com/user-attachments/assets/965c533e-d0ea-4133-899f-f5ad4aacb279" />
+<img width="600" alt="Image" src="https://github.com/user-attachments/assets/84047484-7a63-4f6d-b38e-ed2c10008fa3" />
+<img width="600" alt="Image" src="https://github.com/user-attachments/assets/d7bdcc3f-3771-4c4d-88da-05ce49af98c2" />
+<img width="600" alt="Image" src="https://github.com/user-attachments/assets/31c47e9e-3f45-41ef-b3a2-10515b3d631b" />
+<img width="600" alt="Image" src="https://github.com/user-attachments/assets/4a7213c9-76ad-4cf0-8b34-6755d87c2e20" />
+<img width="600" alt="Image" src="https://github.com/user-attachments/assets/5ea50518-1f03-4047-b318-a6ef9955590c" />
 
 ---
 
