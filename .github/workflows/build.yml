@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: '🔖 版本号 (保持 Auto 将自动读取上一版并 +0.0.1)'
+        description: '🔖 版本号 (保持 Auto 将自动读取上一版并 +0.1)'
         required: true
         default: 'Auto'
       highlights:
@@ -30,16 +30,15 @@ jobs:
         run: |
           INPUT_VER="${{ github.event.inputs.version }}"
           if [ "$INPUT_VER" = "Auto" ]; then
-            LATEST_TAG=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+            LATEST_TAG=$(gh release list -R "${{ github.repository }}" --limit 1 | awk '{print $1}')
             if [ -z "$LATEST_TAG" ] || [ "$LATEST_TAG" = "null" ]; then
-              NEW_VER="v1.0.0"
+              NEW_VER="v1.0"
             else
               MAJOR=$(echo $LATEST_TAG | cut -d. -f1 | tr -d 'v')
               MINOR=$(echo $LATEST_TAG | cut -d. -f2)
-              PATCH=$(echo $LATEST_TAG | cut -d. -f3)
-              if [ -z "$PATCH" ]; then PATCH=0; fi
-              PATCH=$((PATCH + 1))
-              NEW_VER="v${MAJOR}.${MINOR}.${PATCH}"
+              # 💡 直接对第二段 (MINOR) 进行 +1 操作
+              MINOR=$((MINOR + 1))
+              NEW_VER="v${MAJOR}.${MINOR}"
             fi
           else
             NEW_VER="$INPUT_VER"
