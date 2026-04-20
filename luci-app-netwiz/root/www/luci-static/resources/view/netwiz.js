@@ -46,7 +46,15 @@ return view.extend({
             '.nw-badge-bypass { background: #d1fae5; color: #059669; }',
             '.nw-card-title { font-size: 20px; margin: 0 0 10px 0; color: #ffffff; font-weight: 600; }',
             '.nw-card span { font-size: 15px; color: #ffffff; line-height: 1.5; opacity: 0.9; }',
-            '.nw-form-area, .nw-confirm-board { max-width: 460px; margin: 0 auto; text-align: left; padding: 40px; border-radius: 16px; background-color: rgba(255, 255, 255, 0.88); box-shadow: 0 10px 30px rgba(0,0,0,0.06); }',
+            
+            /* 💡 修改：必须加上 position: relative; 以便内部的返回箭头绝对定位 */
+            '.nw-form-area, .nw-confirm-board { position: relative; max-width: 460px; margin: 0 auto; text-align: left; padding: 40px; border-radius: 16px; background-color: rgba(255, 255, 255, 0.88); box-shadow: 0 10px 30px rgba(0,0,0,0.06); }',
+            
+            /* 🚀 新增：左上角返回箭头的 CSS 样式 */
+            '.nw-top-back { position: absolute; top: 20px; left: 20px; width: 36px; height: 36px; border-radius: 50%; background: #f1f5f9; color: #64748b; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s ease; z-index: 10; }',
+            '.nw-top-back:hover { background: #e2e8f0; color: #0f172a; transform: translateX(-3px); box-shadow: 2px 2px 8px rgba(0,0,0,0.05); }',
+            '.nw-top-back svg { width: 20px; height: 20px; }',
+
             '.nw-step-title { text-align: center; margin-bottom: 30px; color: #111; font-weight: 600; font-size: 20px; }',
             '.nw-form-area .cbi-value { border: none; padding: 6px 0; display: flex; flex-direction: column; width: 100%; }',
             '.nw-form-area .cbi-value-title { text-align: left; font-weight: 600; color: #222; font-size: 15px; margin-bottom: 10px; }',
@@ -119,6 +127,10 @@ return view.extend({
 
             '  <div id="step-2" class="nw-step" style="display: none;">',
             '    <div class="nw-form-area">',
+            '      ',
+            '      <div class="nw-top-back" id="top-back-1" title="返回首页">',
+            '         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>',
+            '      </div>',
             '      <div id="fields-router" style="display: none;">',
             '        <div class="nw-step-title">配置 WAN 口网络</div>',
             '        <div style="display: flex; align-items: center; width: 100%; padding: 15px 0;">',
@@ -159,6 +171,10 @@ return view.extend({
 
             '  <div id="step-3" class="nw-step" style="display: none;">',
             '    <div class="nw-confirm-board">',
+            '      ',
+            '      <div class="nw-top-back" id="top-back-2" title="返回修改">',
+            '         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>',
+            '      </div>',
             '      <div class="nw-step-title">网 络 配 置 确 认</div>',
             '      <p style="color:#555; text-align:center;">即将应用以下网络配置，请核对：</p>',
             '      <div id="confirm-mode-text" style="color: #fff; background: #3b82f6; padding: 20px; border-radius: 12px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); margin-top: 15px;"></div>',
@@ -234,11 +250,10 @@ return view.extend({
                                         okText: '立即更新',
                                         cancelText: '暂不更新',
                                         onOk: function() {
-                                            // 切换弹窗状态
                                             openModal({
                                                 title: '⚙️ 正在极速安装',
                                                 msg: '正在部署本地更新包，请稍候...<br><br><span style="font-size:13px; color:#666;">安装非常快，系统即将自动刷新...</span>', 
-                                                spin: true // 直接在此开启转圈，不传 okText 则会自动隐藏按钮
+                                                spin: true 
                                             });
 
                                             var forceReload = function() {
@@ -246,7 +261,6 @@ return view.extend({
                                                 window.location.href = currentUrl + '?t=' + new Date().getTime();
                                             };
 
-                                            // 执行安装指令do_install
                                             callNetSetup('do_install').then(function() {
                                                 setTimeout(forceReload, 12000);
                                             }).catch(function() {
@@ -257,7 +271,6 @@ return view.extend({
                                 });
                             };
 
-                            // check_update
                             callNetSetup('check_update').then(function(res) {
                                 if (res === 1) {
                                     showReadyBadge();
@@ -266,7 +279,6 @@ return view.extend({
                                     var pollCount = 0;
                                     var pollStatus = setInterval(function() {
                                         pollCount++;
-                                        // 若 60 秒 (15次*4s) 还没下载完，自动停止轮询
                                         if (pollCount > 15) {
                                             clearInterval(pollStatus);
                                             return;
@@ -438,8 +450,12 @@ return view.extend({
             });
         });
 
+        // 💡 绑定：底部按钮和左上角返回箭头的事件监听
         container.querySelector('#btn-back-1').addEventListener('click', function () { step2.style.display = 'none'; step1.style.display = 'block'; });
+        container.querySelector('#top-back-1').addEventListener('click', function () { step2.style.display = 'none'; step1.style.display = 'block'; });
+
         container.querySelector('#btn-back-2').addEventListener('click', function () { step3.style.display = 'none'; step2.style.display = 'block'; });
+        container.querySelector('#top-back-2').addEventListener('click', function () { step3.style.display = 'none'; step2.style.display = 'block'; });
 
         container.querySelector('#btn-next-2').addEventListener('click', function () {
             try {
