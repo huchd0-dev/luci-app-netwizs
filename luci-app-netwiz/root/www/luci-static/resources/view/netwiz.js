@@ -249,26 +249,22 @@ return view.extend({
                         okText: '立即更新',
                         cancelText: '暂不更新',
                         onOk: function() {
-                                            try { poll.stop(); } catch(e) {}
-                                            openModal({
-                                                title: '⚙️ 正在极速安装',
-                                                msg: '正在安装更新包，请稍候...<br><br><span style="font-size:13px; color:#666;">网页即将自动刷新。<br>若长时间无响应，请按 <b>Ctrl + F5</b> 手动强制刷新。</span>', 
-                                                spin: true 
-                                            });
+                            // 停止心跳，防止被踢
+                            try { poll.stop(); } catch(e) {}
+                            
+                            openModal({
+                                title: '⚙️ 正在极速安装',
+                                msg: '正在安装更新包，请稍候...<br><br><span style="font-size:13px; color:#666;">网页即将自动刷新。<br>若长时间无响应，请按 <b>Ctrl + F5</b> 手动强制刷新。</span>', 
+                                spin: true 
+                            });
 
-                                            // 执行安装指令
-                                            callNetSetup('do_install').then(function() {
-                                                setTimeout(function() { location.reload(true); }, 12000);
-                                            }).catch(function() {
-                                                setTimeout(function() { location.reload(true); }, 12000);
-                                            });
-                                        }
-
+                            // 定義強制刷新並帶上時間戳以破解快取的函數
                             var forceReload = function() {
                                 var currentUrl = window.location.href.split('?')[0];
                                 window.location.href = currentUrl + '?t=' + new Date().getTime();
                             };
 
+                            // 執行安裝指令
                             callNetSetup('do_install').then(function() {
                                 setTimeout(forceReload, 12000);
                             }).catch(function() {
