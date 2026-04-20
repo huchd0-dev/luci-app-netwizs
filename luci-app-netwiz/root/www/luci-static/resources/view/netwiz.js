@@ -47,10 +47,8 @@ return view.extend({
             '.nw-card-title { font-size: 20px; margin: 0 0 10px 0; color: #ffffff; font-weight: 600; }',
             '.nw-card span { font-size: 15px; color: #ffffff; line-height: 1.5; opacity: 0.9; }',
             
-            /* 💡 修改：必须加上 position: relative; 以便内部的返回箭头绝对定位 */
             '.nw-form-area, .nw-confirm-board { position: relative; max-width: 460px; margin: 0 auto; text-align: left; padding: 40px; border-radius: 16px; background-color: rgba(255, 255, 255, 0.88); box-shadow: 0 10px 30px rgba(0,0,0,0.06); }',
             
-            /* 🚀 新增：左上角返回箭头的 CSS 样式 */
             '.nw-top-back { position: absolute; top: 20px; left: 20px; width: 36px; height: 36px; border-radius: 50%; background: #f1f5f9; color: #64748b; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s ease; z-index: 10; }',
             '.nw-top-back:hover { background: #e2e8f0; color: #0f172a; transform: translateX(-3px); box-shadow: 2px 2px 8px rgba(0,0,0,0.05); }',
             '.nw-top-back svg { width: 20px; height: 20px; }',
@@ -271,11 +269,12 @@ return view.extend({
                                 });
                             };
 
-                            callNetSetup('check_update').then(function(res) {
+                            // 🚀 核心修复 3：呼叫 RPC 时，附带 latestVer (最新版本号) 给后端做双向校验！
+                            callNetSetup('check_update', latestVer).then(function(res) {
                                 if (res === 1) {
                                     showReadyBadge();
                                 } else {
-                                    callNetSetup('prepare_update');
+                                    callNetSetup('prepare_update', latestVer);
                                     var pollCount = 0;
                                     var pollStatus = setInterval(function() {
                                         pollCount++;
@@ -283,7 +282,7 @@ return view.extend({
                                             clearInterval(pollStatus);
                                             return;
                                         }
-                                        callNetSetup('check_update').then(function(r) {
+                                        callNetSetup('check_update', latestVer).then(function(r) {
                                             if (r === 1) {
                                                 clearInterval(pollStatus);
                                                 showReadyBadge();
