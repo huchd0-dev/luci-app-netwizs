@@ -10,9 +10,8 @@
 'require uci';
 'require poll';
 
-var CURRENT_VERSION = 'v1.0.15';
+var CURRENT_VERSION = 'v1.0.0';
 
-// 保留这一个全能通道！
 var callNetSetup = rpc.declare({
     object: 'netwiz',
     method: 'set_network',
@@ -23,7 +22,7 @@ var callNetSetup = rpc.declare({
 var getWanStatus = rpc.declare({
     object: 'network.interface',
     method: 'dump',
-    expect: { 'interface': [] }
+    expect: { '': {} } 
 });
 
 return view.extend({
@@ -157,7 +156,7 @@ return view.extend({
             '      <div id="fields-pppoe" style="display: none;">',
             '        <div class="nw-step-title">宽带账号信息</div>',
             '        <div class="cbi-value"><label class="cbi-value-title">宽带账号</label><div class="cbi-value-field"><input type="text" id="pppoe-user" placeholder="请输入运营商提供的宽带账号" autocomplete="new-password"></div></div>',
-            '        <div class="cbi-value"><label class="cbi-value-title">宽带密码</label><div class="cbi-value-field"><input type="password" id="pppoe-pass" placeholder="请输入宽带密码" autocomplete="new-password"></div></div>',
+            '        <div class="cbi-value"><label class="cbi-value-title">宽带密码</label><div class="cbi-value-field"><input type="text" id="pppoe-pass" placeholder="请输入宽带密码" autocomplete="new-password"></div></div>',
             '      </div>',
             '      <div id="fields-lan" style="display: none;">',
             '        <div class="nw-step-title">配置 LAN 口网络</div>',
@@ -228,14 +227,12 @@ return view.extend({
             var badge = container.querySelector('#nw-update-badge');
             var now = Date.now();
             var cacheKey = 'nw_last_update_check';
-            var cacheExpiry = 5 * 60 * 1000; // 5 分钟冷却时间
+            var cacheExpiry = 5 * 60 * 1000;
 
-            // 1. 读取本地缓存记录
             var cached = JSON.parse(localStorage.getItem(cacheKey) || '{}');
 
-            // 2. 显示升级按钮的弹窗逻辑
             var showReadyBadge = function(latestVer, rawText) {
-                var cleanText = rawText.split('---')[0].replace(/### ✨ 最新版发布/g, '').trim();
+                var cleanText = rawText.split('---')[0].replace(/### 最新版发布/g, '').trim();
                 if (!cleanText) cleanText = '常规稳定性更新与优化。';
 
                 badge.className = 'nw-badge-new';
@@ -247,7 +244,7 @@ return view.extend({
                 badge = newBadge;
 
                 badge.addEventListener('click', function() {
-                    var msgHtml = '<b>✨ 发现新版本！更新后底层权限将重置，需重新登录。</b><br><br><b>更新亮点：</b><div style="text-align:left; font-size:13px; background:#f1f5f9; padding:10px; margin-top:10px; border-radius:6px; max-height:150px; overflow-y:auto; border:1px solid #cbd5e1;">' + cleanText.replace(/\n/g, '<br>') + '</div>';
+                    var msgHtml = '<b>发现新版本！更新后底层权限将重置，需重新登录。</b><br><br><b>更新亮点：</b><div style="text-align:left; font-size:13px; background:#f1f5f9; padding:10px; margin-top:10px; border-radius:6px; max-height:150px; overflow-y:auto; border:1px solid #cbd5e1;">' + cleanText.replace(/\n/g, '<br>') + '</div>';
 
                     openModal({
                         title: '升级准备就绪 (' + latestVer + ')',
@@ -280,12 +277,10 @@ return view.extend({
 
             var triggerDownload = function(latestVer, rawText) {
                 if (latestVer && compareVersions(latestVer, CURRENT_VERSION) > 0) {
-                    // 询问后端：包下载好了没
                     callNetSetup('check_update', latestVer).then(function(res) {
                         if (res === 1) {
                             showReadyBadge(latestVer, rawText);
                         } else {
-                            // 没下载好，指令后端开始下载
                             callNetSetup('prepare_update', latestVer);
                             var pollCount = 0;
                             var pollStatus = setInterval(function() {
@@ -296,13 +291,11 @@ return view.extend({
                                 }).catch(function(){});
                             }, 4000);
                         }
-                    }).catch(function(e) { console.error('Status check failed', e); });
+                    }).catch(function(e) {});
                 }
             };
 
-            // 4. 判断逻辑：走缓存，还是请求 GitHub API
             if (cached.time && (now - cached.time < cacheExpiry) && cached.version) {
-                // 有缓存，直接触发下载逻辑
                 triggerDownload(cached.version, cached.body || '');
                 return; 
             }
@@ -317,89 +310,134 @@ return view.extend({
                         var latestVer = data[0].tag_name;
                         var rawText = data[0].body || '';
                         localStorage.setItem(cacheKey, JSON.stringify({ time: now, version: latestVer, body: rawText }));
-                        // 获取成功，触发下载逻辑
                         triggerDownload(latestVer, rawText);
                     }
-                }).catch(function(e) { console.error('OTA Check failed:', e); });
+                }).catch(function(e) {});
         }
 
         setTimeout(doUpdateCheck, 1500);
 
-        function updateStatusDisplay() {
-            if (modeTextEl) {
-                modeTextEl.innerHTML = "<div class='nw-spinner' style='width:30px; height:30px; border-width:3px; margin: 0 auto; border-top-color: #fff;'></div><div style='margin-top:10px; font-size:15px; font-weight:bold; color:#fff;'>读取配置与实时联网状态中...</div>";
-            }
-            uci.unload('network');
-            uci.unload('dhcp');
-
-            Promise.all([
-                uci.load('network'),
-                uci.load('dhcp').catch(function(){}),
-                getWanStatus() // 获取所有接口的实时 dump 数据
-            ]).then(function(results) {
-                var ifaces = results[2] || [];
-                var wProto = String(uci.get('network', 'wan', 'proto') || '').trim().toLowerCase();
+        function safePromise(promise, fallback, timeoutMs) {
+            return new Promise(function(resolve) {
+                var timer = setTimeout(function() {
+                    console.warn("NETWIZ: 底层读取超时");
+                    resolve(fallback);
+                }, timeoutMs || 3000);
                 
-                // 💡 核心逻辑：在所有运行中的接口里，寻找那个正在负责上网的“真命天子”
-                var activeWan = ifaces.find(function(i) { 
-                    return i.interface === 'wan' || i.proto === wProto || i.device === 'eth0' || i.device === 'wan'; 
-                }) || {};
-
-                var isWanUp = activeWan.up === true;
-                // 提取真实分配到的公网/内网 IP
-                var liveWanIp = (activeWan['ipv4-address'] && activeWan['ipv4-address'][0]) ? activeWan['ipv4-address'][0].address : '';
-
-                // --- 后面的显示逻辑保持不变 ---
-                var wIp = String(uci.get('network', 'wan', 'ipaddr') || '未获取').trim();
-                var lIp = String(uci.get('network', 'lan', 'ipaddr') || window.location.hostname).trim();
-                var lGw = String(uci.get('network', 'lan', 'gateway') || '未设置').trim();
-                var lIgnore = String(uci.get('dhcp', 'lan', 'ignore') || '').trim();
-                var isBypass = (lIgnore === '1' || lIgnore === 'true' || lIgnore === 'on' || lIgnore === 'yes');
-
-                var sTitle = "";
-                var sDetails = "";
-                var statusBadge = "";
-
-                if (isBypass) {
-                    sTitle = "旁路由模式";
-                    sDetails = "本机 IP: <span class='nw-hl'>" + lIp + "</span>&nbsp;&nbsp;&nbsp;&nbsp;网关: <span class='nw-hl'>" + lGw + "</span>";
-                } else if (wProto === 'pppoe') {
-                    var pUser = String(uci.get('network', 'wan', 'username') || '未设置').trim();
-                    sTitle = "主路由 (宽带拨号)";
-
-                    if (isWanUp && liveWanIp) {
-                        statusBadge = "<span style='font-size:12px; background:#10b981; color:#fff; padding:3px 8px; border-radius:12px; margin-left:12px; vertical-align:middle;'>拨号成功</span>";
-                        sDetails = "账号: <span class='nw-hl'>" + pUser + "</span>&nbsp;&nbsp;&nbsp;&nbsp;公网 IP: <span class='nw-hl'>" + liveWanIp + "</span>";
-                    } else {
-                        statusBadge = "<span style='font-size:12px; background:#ef4444; color:#fff; padding:3px 8px; border-radius:12px; margin-left:12px; vertical-align:middle;'>拨号中 / 未连接</span>";
-                        sDetails = "局域网 IP: <span class='nw-hl'>" + lIp + "</span>&nbsp;&nbsp;&nbsp;&nbsp;账号: <span class='nw-hl'>" + pUser + "</span>";
-                    }
-                } else if (wProto === 'dhcp') {
-                    sTitle = "二级路由 (动态 DHCP)";
-                    if (isWanUp && liveWanIp) {
-                        statusBadge = "<span style='font-size:12px; background:#10b981; color:#fff; padding:3px 8px; border-radius:12px; margin-left:12px; vertical-align:middle;'>已获取 IP</span>";
-                        sDetails = "局域网 IP: <span class='nw-hl'>" + lIp + "</span>&nbsp;&nbsp;&nbsp;&nbsp;WAN IP: <span class='nw-hl'>" + liveWanIp + "</span>";
-                    } else {
-                        statusBadge = "<span style='font-size:12px; background:#f59e0b; color:#fff; padding:3px 8px; border-radius:12px; margin-left:12px; vertical-align:middle;'>等待分配...</span>";
-                        sDetails = "局域网 IP: <span class='nw-hl'>" + lIp + "</span>&nbsp;&nbsp;&nbsp;&nbsp;WAN 状态: <span class='nw-hl'>获取 IP 中</span>";
-                    }
-                } else if (wProto === 'static') {
-                    sTitle = "二级路由 (静态 IP)";
-                    statusBadge = isWanUp ? "<span style='font-size:12px; background:#10b981; color:#fff; padding:3px 8px; border-radius:12px; margin-left:12px; vertical-align:middle;'>接口已连接</span>" : "<span style='font-size:12px; background:#ef4444; color:#fff; padding:3px 8px; border-radius:12px; margin-left:12px; vertical-align:middle;'>未插入网线</span>";
-                    sDetails = "局域网 IP: <span class='nw-hl'>" + lIp + "</span>&nbsp;&nbsp;&nbsp;&nbsp;WAN IP: <span class='nw-hl'>" + wIp + "</span>";
-                } else {
-                    sTitle = "局域网模式";
-                    sDetails = "局域网 IP: <span class='nw-hl'>" + lIp + "</span>&nbsp;&nbsp;&nbsp;&nbsp;DHCP 服务: <span class='nw-hl'>开启</span>";
+                if (!promise || !promise.then) {
+                    clearTimeout(timer);
+                    return resolve(fallback);
                 }
 
-                if (modeTextEl) {
-                    modeTextEl.innerHTML = "<div style='font-size:17px; font-weight:600; margin-bottom:10px; color:#ffffff; font-family: monospace; display: flex; align-items: center; justify-content: center;'>" + sTitle + statusBadge + "</div>" +
-                                           "<div style='font-size:15px; font-weight:bold; color:#ffffff; font-family:monospace; letter-spacing:0.5px;'>" + sDetails + "</div>";
-                }
-            }).catch(function(err) {
-                console.error("Status Update Error:", err);
-                if (modeTextEl) modeTextEl.innerHTML = "<div style='color:#ef4444; font-weight:bold;'>系统状态读取异常</div>";
+                promise.then(function(res) {
+                    clearTimeout(timer);
+                    resolve(res);
+                }).catch(function(err) {
+                    clearTimeout(timer);
+                    resolve(fallback);
+                });
             });
+        }
+
+        function safeUciGet(conf, sec, opt, def) {
+            try {
+                var val = uci.get(conf, sec, opt);
+                if (val === null || val === undefined) return def;
+                return String(val).trim();
+            } catch(e) {
+                return def;
+            }
+        }
+
+        function updateStatusDisplay() {
+            try {
+                Promise.all([
+                    safePromise(uci.load('network'), null, 3000),
+                    safePromise(uci.load('dhcp'), null, 3000),
+                    safePromise(getWanStatus(), {}, 3000)
+                ]).then(function(results) {
+                    var rawIfaces = results[2] || {};
+                    var ifaces = rawIfaces.interface || rawIfaces || [];
+                    if (!Array.isArray(ifaces)) ifaces = [];
+
+                    var wProto = safeUciGet('network', 'wan', 'proto', '').toLowerCase();
+                    
+                    var activeWan = ifaces.find(function(i) { 
+                        return i && (i.interface === 'wan' || i.proto === wProto || i.device === 'eth0' || i.device === 'wan'); 
+                    }) || {};
+
+                    var isWanUp = activeWan.up === true;
+
+                    var liveWanIp = ((activeWan['ipv4-address'] && activeWan['ipv4-address'][0]) ? activeWan['ipv4-address'][0].address : '').split('/')[0];
+                    var liveGw = activeWan.nexthop || (activeWan['ipv4-address'] && activeWan['ipv4-address'][0] ? activeWan['ipv4-address'][0].ptpaddress : '') || '获取中...';
+
+
+                    var wIp = safeUciGet('network', 'wan', 'ipaddr', '未获取').split('/')[0];
+                    var wGw = safeUciGet('network', 'wan', 'gateway', '未设置'); 
+                    var lIp = safeUciGet('network', 'lan', 'ipaddr', window.location.hostname).split('/')[0];
+                    var lGw = safeUciGet('network', 'lan', 'gateway', '未设置');
+                    var lIgnore = safeUciGet('dhcp', 'lan', 'ignore', '');
+                    var isBypass = (lIgnore === '1' || lIgnore === 'true' || lIgnore === 'on' || lIgnore === 'yes');
+
+                    if (container.querySelector('#pppoe-user')) container.querySelector('#pppoe-user').value = safeUciGet('network', 'wan', 'username', '');
+                    if (container.querySelector('#pppoe-pass')) container.querySelector('#pppoe-pass').value = safeUciGet('network', 'wan', 'password', '');
+                    if (container.querySelector('#router-ip')) container.querySelector('#router-ip').value = (wIp !== '未获取') ? wIp : '';
+                    if (container.querySelector('#router-gw')) container.querySelector('#router-gw').value = (wGw !== '未设置') ? wGw : '';
+                    if (container.querySelector('#lan-ip')) container.querySelector('#lan-ip').value = lIp;
+                    if (container.querySelector('#lan-gw')) container.querySelector('#lan-gw').value = (lGw !== '未设置') ? lGw : '';
+                    
+                    var bypassToggle = container.querySelector('#lan-bypass-toggle');
+                    if (bypassToggle) {
+                        bypassToggle.checked = isBypass;
+                        container.querySelector('#lan-bypass-warning').style.display = isBypass ? 'block' : 'none';
+                        container.querySelector('#lan-main-warning').style.display = isBypass ? 'none' : 'block';
+                    }
+
+                    var sTitle = "";
+                    var sDetails = "";
+                    var statusBadge = "";
+
+                    if (isBypass) {
+                        sTitle = "旁路由模式";
+                        sDetails = "本机 IP: <span class='nw-hl'>" + lIp + "</span>&nbsp;&nbsp;&nbsp;&nbsp;上级网关: <span class='nw-hl'>" + lGw + "</span>";
+                    } else if (wProto === 'pppoe') {
+                        sTitle = "主路由 (宽带拨号)";
+                        if (isWanUp && liveWanIp) {
+                            statusBadge = "<span style='font-size:12px; background:#10b981; color:#fff; padding:3px 8px; border-radius:12px; margin-left:12px; vertical-align:middle;'>拨号成功</span>";
+                            sDetails = "公网 IP: <span class='nw-hl'>" + liveWanIp + "</span>&nbsp;&nbsp;&nbsp;&nbsp;远端网关: <span class='nw-hl'>" + liveGw + "</span>";
+                        } else {
+                            statusBadge = "<span style='font-size:12px; background:#ef4444; color:#fff; padding:3px 8px; border-radius:12px; margin-left:12px; vertical-align:middle;'>拨号中 / 未连接</span>";
+                            sDetails = "局域网 IP: <span class='nw-hl'>" + lIp + "</span>&nbsp;&nbsp;&nbsp;&nbsp;状态: <span class='nw-hl'>等待远端响应</span>";
+                        }
+                    } else if (wProto === 'dhcp') {
+                        sTitle = "二级路由 (动态 DHCP)";
+                        if (isWanUp && liveWanIp) {
+                            statusBadge = "<span style='font-size:12px; background:#10b981; color:#fff; padding:3px 8px; border-radius:12px; margin-left:12px; vertical-align:middle;'>已获取 IP</span>";
+                            sDetails = "WAN IP: <span class='nw-hl'>" + liveWanIp + "</span>&nbsp;&nbsp;&nbsp;&nbsp;上级网关: <span class='nw-hl'>" + liveGw + "</span>";
+                        } else {
+                            statusBadge = "<span style='font-size:12px; background:#f59e0b; color:#fff; padding:3px 8px; border-radius:12px; margin-left:12px; vertical-align:middle;'>等待分配...</span>";
+                            sDetails = "局域网 IP: <span class='nw-hl'>" + lIp + "</span>&nbsp;&nbsp;&nbsp;&nbsp;状态: <span class='nw-hl'>获取 IP 中</span>";
+                        }
+                    } else if (wProto === 'static') {
+                        sTitle = "二级路由 (静态 IP)";
+                        statusBadge = isWanUp ? "<span style='font-size:12px; background:#10b981; color:#fff; padding:3px 8px; border-radius:12px; margin-left:12px; vertical-align:middle;'>接口已连接</span>" : "<span style='font-size:12px; background:#ef4444; color:#fff; padding:3px 8px; border-radius:12px; margin-left:12px; vertical-align:middle;'>未插入网线</span>";
+                        sDetails = "WAN IP: <span class='nw-hl'>" + wIp + "</span>&nbsp;&nbsp;&nbsp;&nbsp;上级网关: <span class='nw-hl'>" + wGw + "</span>";
+                    } else {
+                        sTitle = "局域网模式";
+                        sDetails = "局网 IP: <span class='nw-hl'>" + lIp + "</span>&nbsp;&nbsp;&nbsp;&nbsp;DHCP 服务: <span class='nw-hl'>开启</span>";
+                    }
+
+                    if (modeTextEl) {
+                        modeTextEl.innerHTML = "<div style='font-size:17px; font-weight:600; margin-bottom:10px; color:#ffffff; font-family: monospace; display: flex; align-items: center; justify-content: center;'>" + sTitle + statusBadge + "</div>" +
+                                               "<div style='font-size:15px; font-weight:bold; color:#ffffff; font-family:monospace; letter-spacing:0.5px;'>" + sDetails + "</div>";
+                    }
+                }).catch(function(err) {
+                    if (modeTextEl) modeTextEl.innerHTML = "<div style='color:#ef4444; font-weight:bold;'>系统读取异常，防卡死已触发</div>";
+                });
+            } catch(fatalError) {
+                console.error("NETWIZ 发生致命错误:", fatalError);
+                if (modeTextEl) modeTextEl.innerHTML = "<div style='color:#ef4444; font-weight:bold;'>底层崩溃被拦截，请强制刷新</div>";
+            }
         }
 
         updateStatusDisplay();
@@ -543,17 +581,17 @@ return view.extend({
                 }
 
                 uci.load('network').then(function() {
-                    var currentLanIp = String(uci.get('network', 'lan', 'ipaddr') || window.location.hostname).replace(/[^0-9\.]/g, '');
-                    var currentLanGw = String(uci.get('network', 'lan', 'gateway') || '').replace(/[^0-9\.]/g, '');
+                    var currentLanIp = safeUciGet('network', 'lan', 'ipaddr', window.location.hostname).split('/')[0].replace(/[^0-9\.]/g, '');
+                    var currentLanGw = safeUciGet('network', 'lan', 'gateway', '').replace(/[^0-9\.]/g, '');
                     
-                    var currentWanProto = String(uci.get('network', 'wan', 'proto') || '').trim();
+                    var currentWanProto = safeUciGet('network', 'wan', 'proto', '').toLowerCase();
                     var currentWanIp = '';
                     if (currentWanProto === 'static') {
-                        currentWanIp = String(uci.get('network', 'wan', 'ipaddr') || '').replace(/[^0-9\.]/g, '');
+                        currentWanIp = safeUciGet('network', 'wan', 'ipaddr', '').split('/')[0].replace(/[^0-9\.]/g, '');
                     }
-                    var currentWanGw = String(uci.get('network', 'wan', 'gateway') || '').replace(/[^0-9\.]/g, '');
+                    var currentWanGw = safeUciGet('network', 'wan', 'gateway', '').replace(/[^0-9\.]/g, '');
                     
-                    var lDhcp = String(uci.get('dhcp', 'lan', 'ignore') || '').trim();
+                    var lDhcp = safeUciGet('dhcp', 'lan', 'ignore', '');
                     var currentBypass = (lDhcp === '1' || lDhcp === 'true' || lDhcp === 'on' || lDhcp === 'yes') ? '1' : '0';
                     var newBypass = bypassToggle.checked ? '1' : '0';
 
@@ -606,7 +644,6 @@ return view.extend({
                             if (rType === 'static') {
                                 modeText = buildDetailHtml("二级路由 (静态 IP)", [
                                     ["WAN IP", targetIp],
-                                    ["子网掩码", "255.255.255.0"],
                                     ["上级网关", targetGw]
                                 ]);
                             } else {
@@ -680,7 +717,6 @@ return view.extend({
                 var ts = new Date().getTime();
                 
                 if (selectedMode === 'lan' && arg1 && arg1 !== currentHost) {
-                    // 改了 IP，要去新地址登录
                     openModal({ 
                         title: '配置已生效', 
                         msg: '由于 IP 已变更为 <b style="color:#3b82f6;">' + arg1 + '</b>，<br>系统将在 15 秒后尝试跳转到新地址。<br><br><small>注：跳转后需重新登录。</small>', 
@@ -688,7 +724,6 @@ return view.extend({
                     });
                     setTimeout(function() { window.location.href = 'http://' + arg1 + '?v=' + ts; }, 15000);
                 } else {
-                    // 没改 IP，只是重启网络
                     openModal({ 
                         title: '正在应用配置', 
                         msg: '底层网络正在重置，请稍候...<br><br><span style="font-size: 14px; color: #555;">(若 15 秒后未自动返回，请手动刷新页面)</span>', 
