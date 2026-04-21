@@ -416,22 +416,6 @@ function _t(key) {
 
 return view.extend({
     render: function () {
-        // 核心修复机制：检查刷新标记，若存在则使用 fetch 强制绕过浏览器缓存，拉取最新底层文件
-        if (localStorage.getItem('nw_force_refresh') === '1') {
-            localStorage.removeItem('nw_force_refresh');
-            var loaderContainer = dom.create('div', { id: 'netwiz-container', style: 'padding: 50px; text-align: center; color: #555; font-family: sans-serif;' }, '<div style="width: 40px; height: 40px; border: 4px solid #f1f5f9; border-top: 4px solid #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div><div style="font-size: 16px; font-weight: bold;">正在同步最新界面缓存...</div><style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>');
-            
-            // 使用 fetch 强行要求浏览器重新向路由器拿这个页面，不使用磁盘缓存
-            fetch(window.location.href, { cache: 'reload' })
-                .then(function() {
-                    window.location.replace(window.location.href.split('?')[0] + '?t=' + new Date().getTime());
-                })
-                .catch(function() {
-                    window.location.replace(window.location.href.split('?')[0] + '?t=' + new Date().getTime());
-                });
-            return loaderContainer;
-        }
-
         if (!document.querySelector('meta[name="viewport"]')) {
             var meta = document.createElement('meta');
             meta.name = 'viewport';
@@ -453,7 +437,7 @@ return view.extend({
             '#nw-lang-switch:hover { background: rgba(255,255,255,0.25); }',
             '#nw-lang-switch option { color: #333; background: #fff; }',
 
-            /* 右上角红点与悬浮提示样式 */
+            /* 右上角红點與懸浮提示樣式 */
             '#update-red-dot { display: none; position: absolute; top: -3px; right: -3px; width: 8px; height: 8px; background-color: #ef4444; border-radius: 50%; box-shadow: 0 0 4px rgba(239, 68, 68, 0.8); animation: pulse-dot 2s infinite; pointer-events: none; }',
             '@keyframes pulse-dot { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }',
             '#update-tooltip { display: none; position: absolute; bottom: 130%; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: #fff; padding: 5px 10px; border-radius: 6px; font-size: 13px; white-space: nowrap; pointer-events: none; z-index: 100; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }',
@@ -514,7 +498,7 @@ return view.extend({
             '.nw-modal-btn-danger:hover { background: #dc2626; }',
             '.nw-hl { color: #facc15; font-weight: bold; }',
 
-            /* 响应式布局 */
+            /* 響應式佈局 */
             '@media screen and (max-width: 768px) {',
             '  .nw-wrapper { padding-top: 3vh; padding-bottom: 5vh; }',
             '  .nw-header { margin-top: -30px; padding: 20px 15px; width: 92%; box-sizing: border-box; border-radius: 12px; }',
@@ -686,7 +670,6 @@ return view.extend({
                 var redDot = container.querySelector('#update-red-dot');
                 var tooltip = container.querySelector('#update-tooltip');
 
-                // 仅当远端版本 > 我们真实的版本时，才显示红点
                 if (compareVersions(latestVer, CURRENT_VERSION) <= 0) return;
 
                 redDot.style.display = 'block';
@@ -694,7 +677,7 @@ return view.extend({
                 tooltip.className = 'has-update';
                 verWrapper.style.cursor = 'pointer';
 
-                // 防止多次绑定点击事件
+                // 防止多次綁定點擊事件
                 var newWrapper = verWrapper.cloneNode(true);
                 verWrapper.parentNode.replaceChild(newWrapper, verWrapper);
                 verWrapper = newWrapper;
@@ -707,8 +690,6 @@ return view.extend({
                         onOk: function() {
                             try { poll.stop(); } catch(e) {}
                             
-                            // 写入强制无缓存刷新标记到 localStorage，供下次加载时使用
-                            localStorage.setItem('nw_force_refresh', '1');
                             localStorage.removeItem('nw_last_update_check');
 
                             openModal({ title: _t('U_INST'), msg: _t('U_INST_MSG'), spin: true });
@@ -1056,9 +1037,6 @@ return view.extend({
             
             var handleSuccess = function() {
                 var currentHost = window.location.hostname, cleanUrl = window.location.href.split('?')[0], ts = new Date().getTime();
-                
-                // 写入强制刷新标记，使用 localStorage 确保即使退出登录也不会被清除
-                localStorage.setItem('nw_force_refresh', '1');
 
                 if (selectedMode === 'lan' && arg1 && arg1 !== currentHost) {
                     openModal({ title: _t('M_SUCC_TIT'), msg: _t('M_SUCC_MSG1') + arg1 + _t('M_SUCC_MSG2'), spin: true });
