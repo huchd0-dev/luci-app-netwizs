@@ -432,14 +432,10 @@ return view.extend({
             '.nw-main-title { font-size: 35px; font-weight: 600; margin-bottom: 10px; color: #ffffff; letter-spacing: 2px; }',
             '.nw-header p { color: #ffffff; font-size: 16px; opacity: 0.9; margin: 0; letter-spacing: 1px; }',
 
-            '#nw-lang-switch { position: absolute; top: -15px; left: 15px; z-index: 100; padding: 5px 10px; border-radius: 6px; background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.3); font-size: 13px; outline: none; cursor: pointer; backdrop-filter: blur(5px); transition: all 0.2s; }',
+            '#nw-lang-switch { position: absolute; top: -30px; right: 15px; z-index: 100; padding: 5px 10px; border-radius: 6px; background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.3); font-size: 13px; outline: none; cursor: pointer; backdrop-filter: blur(5px); transition: all 0.2s; }',
             '#nw-lang-switch:hover { background: rgba(255,255,255,0.25); }',
             '#nw-lang-switch option { color: #333; background: #fff; }',
 
-            '#nw-update-badge { position: absolute; top: 10px; right: -200px; white-space: nowrap; padding: 8px 16px; border-radius: 30px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.3s ease; z-index: 10; display: none; background: rgba(255, 255, 255, 0.15);}',
-            '.nw-badge-new { color: #fff !important; border: 1px solid rgba(255, 255, 255, 0.3); animation: pulse 2s infinite; }',
-            '.nw-badge-new:hover { transform: scale(1.05);  background: rgba(255, 255, 255, 0.25); }',
-            '@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(250, 204, 21, 0); } 100% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0); } }',
             '.nw-step { width: 100%; max-width: 750px; text-align: center; animation: slideUp 0.4s ease-out; }',
             '@keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }',
             '.nw-card-group { display: flex; gap: 40px; justify-content: center; flex-wrap: wrap; margin-top: 20px; }',
@@ -506,14 +502,13 @@ return view.extend({
             '  .nw-top-back { top: 12px; left: 12px; width: 32px; height: 32px; }',
             '  .nw-step-title { font-size: 18px; margin-top: 15px; margin-bottom: 20px; }',
             '  #current-mode-display { width: 92%; min-width: auto; padding: 15px; box-sizing: border-box; }',
-            '  #nw-lang-switch { left: 10px; font-size: 12px; padding: 4px 8px; }',
+            '  #nw-lang-switch { font-size: 12px; padding: 4px 8px; }',
             '  .nw-radio-group { flex-wrap: wrap; gap: 12px; }',
             '  .nw-actions { width: 100%; margin: 20px auto 0; display: flex; flex-direction: row; gap: 12px; box-sizing: border-box; }',
             '  .nw-actions button { flex: 1; padding: 12px 0; font-size: 15px; margin: 0; }',
             '  #nw-global-modal .nw-modal-box { padding: 25px 20px; width: 85%; }',
             '  #nw-global-btn-wrap { flex-direction: row; gap: 12px; }',
             '  #nw-global-btn-wrap button { flex: 1; padding: 12px 0; margin: 0; }',
-            '  #nw-update-badge { top: -20px; right: -30px; }',
 
             '}',
             '</style>',
@@ -526,8 +521,7 @@ return view.extend({
             '  </select>',
 
             '  <div class="nw-header">',
-            '    <div id="nw-update-badge"></div>',
-            '    <div class="nw-main-title">{{TITLE}} <span style="font-size:14px; background:#67A57B; padding:4px 10px; border-radius:6px; vertical-align:middle;">' + CURRENT_VERSION + '</span></div>',
+            '    <div class="nw-main-title">{{TITLE}} <span id="nw-version-span" style="position:relative; font-size:14px; background:#67A57B; padding:4px 10px; border-radius:6px; vertical-align:middle; cursor:pointer;">' + CURRENT_VERSION + '<span id="nw-red-dot" style="display:none; position:absolute; top:-4px; right:-4px; width:8px; height:8px; background-color:#ef4444; border-radius:50%; box-shadow:0 0 0 2px #5e72e4;"></span></span></div>',
             '    <p>{{SUBTITLE}}</p>',
             '  </div>',
 
@@ -657,7 +651,6 @@ return view.extend({
         }
 
         function doUpdateCheck() {
-            var badge = container.querySelector('#nw-update-badge');
             var now = Date.now();
             var cacheKey = 'nw_last_update_check';
             var cacheExpiry = 5 * 60 * 1000;
@@ -665,27 +658,33 @@ return view.extend({
 
             var showReadyBadge = function(latestVer, rawText) {
                 var cleanText = rawText.split('---')[0].replace(/### ✨ 最新版发布/g, '').trim();
-                badge.className = 'nw-badge-new';
-                badge.innerText = _t('U_NEW') + latestVer;
-                badge.style.display = 'inline-block';
+                var redDot = container.querySelector('#nw-red-dot');
+                var versionSpan = container.querySelector('#nw-version-span');
 
-                var newBadge = badge.cloneNode(true);
-                badge.parentNode.replaceChild(newBadge, badge);
-                badge = newBadge;
+                if (redDot && versionSpan) {
+                    redDot.style.display = 'block';
+                    var tooltipText = _t('U_NEW') + latestVer;
+                    versionSpan.title = tooltipText; // Hover triggers tooltip
+                    
+                    // Remove any existing event listeners by cloning
+                    var newVersionSpan = versionSpan.cloneNode(true);
+                    versionSpan.parentNode.replaceChild(newVersionSpan, versionSpan);
+                    versionSpan = newVersionSpan;
 
-                badge.addEventListener('click', function() {
-                    openModal({
-                        title: _t('U_READY') + latestVer + ')',
-                        msg: '<b>✨ ' + _t('U_INST_MSG').split('<br><br>')[0] + '</b><br><br><div style="text-align:left; font-size:13px; background:#f1f5f9; padding:10px; margin-top:10px; border-radius:6px; max-height:150px; overflow-y:auto; border:1px solid #cbd5e1;">' + cleanText.replace(/\n/g, '<br>') + '</div>',
-                        okText: _t('U_BTN_NOW'), cancelText: _t('U_BTN_LATER'),
-                        onOk: function() {
-                            try { poll.stop(); } catch(e) {}
-                            openModal({ title: _t('U_INST'), msg: _t('U_INST_MSG'), spin: true });
-                            var forceReload = function() { window.location.href = window.location.href.split('?')[0] + '?t=' + new Date().getTime(); };
-                            callNetSetup('do_install').then(function() { setTimeout(forceReload, 12000); }).catch(function() { setTimeout(forceReload, 12000); });
-                        }
+                    versionSpan.addEventListener('click', function() {
+                        openModal({
+                            title: _t('U_READY') + latestVer + ')',
+                            msg: '<b>✨ ' + _t('U_INST_MSG').split('<br><br>')[0] + '</b><br><br><div style="text-align:left; font-size:13px; background:#f1f5f9; padding:10px; margin-top:10px; border-radius:6px; max-height:150px; overflow-y:auto; border:1px solid #cbd5e1;">' + cleanText.replace(/\n/g, '<br>') + '</div>',
+                            okText: _t('U_BTN_NOW'), cancelText: _t('U_BTN_LATER'),
+                            onOk: function() {
+                                try { poll.stop(); } catch(e) {}
+                                openModal({ title: _t('U_INST'), msg: _t('U_INST_MSG'), spin: true });
+                                var forceReload = function() { window.location.href = window.location.href.split('?')[0] + '?t=' + new Date().getTime(); };
+                                callNetSetup('do_install').then(function() { setTimeout(forceReload, 12000); }).catch(function() { setTimeout(forceReload, 12000); });
+                            }
+                        });
                     });
-                });
+                }
             };
 
             var triggerDownload = function(latestVer, rawText) {
