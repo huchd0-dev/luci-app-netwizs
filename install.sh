@@ -28,7 +28,7 @@ DOWNLOAD_SUCCESS=0
 for FILE in $FILES; do
     # 拼接分类前缀文件名，例如: apk_luci-app-netwiz.apk
     TARGET_FILE="${PKG_TYPE}_${FILE}.${PKG_TYPE}"
-    URL_DIRECT="https://github.com/huchd0/luci/releases/latest/download/${TARGET_FILE}"
+    URL_DIRECT="https://github.com/huchd0/luci-app-netwiz/releases/latest/download/${TARGET_FILE}"
     # ✅ 已替换为目前最稳定高效的代理节点
     URL_PROXY="https://mirror.ghproxy.com/${URL_DIRECT}"
 
