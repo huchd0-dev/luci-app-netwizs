@@ -30,18 +30,25 @@ jobs:
           echo "📦 复制最新代码..."
           rsync -av --exclude='.git/' --exclude='.github/' source-repo/luci-app-netwiz/ dest-repo/applications/luci-app-netwiz/
 
-      - name: 4. 提交并推送到 Fork 仓库
+      - name: 4. 提交并推送到 Fork 仓库的专属分支
         run: |
           cd dest-repo
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # 创建一个专门用于提交 PR 的分支
+          BRANCH_NAME="add-luci-app-netwiz"
+          git checkout -B $BRANCH_NAME
           
           git add applications/luci-app-netwiz/
           
           if git diff --cached --quiet; then
             echo "✅ 代码完全一致，不需要重复同步。"
           else
-            git commit -m "sync: 🤖 手动同步 luci-app-netwiz 最新代码"
-            git push origin master # ⚠️ 对应上面的 ref 分支名
-            echo "🚀 成功推送到 Fork 仓库！"
+            # commit message 直接写成官方要求的格式
+            git commit -m "luci-app-netwiz: add new application"
+            
+            # 推送到您的 Fork 仓库的这个新分支
+            git push -f origin $BRANCH_NAME
+            echo "🚀 成功推送到 Fork 仓库的 $BRANCH_NAME 分支！"
           fi
