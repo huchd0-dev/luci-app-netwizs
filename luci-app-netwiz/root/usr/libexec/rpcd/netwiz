@@ -44,12 +44,12 @@ case "$1" in
                     
                     # 开启后台进程
                     (
-                        # 🌟 防止网络重启或前端断开时被误杀！
+                        # 防止网络重启或前端断开时被误杀
                         exec >/dev/null 2>&1 </dev/null
                         
                         sleep 10
                         
-                        for i in $(seq 1 170); do
+                        for i in $(seq 1 110); do
                             if [ ! -f /tmp/netwiz_pending_confirm ]; then exit 0; fi
                             
                             # 🌟 新 IP 成功访问取消退回
