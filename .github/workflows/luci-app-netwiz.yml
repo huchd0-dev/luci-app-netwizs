@@ -27,8 +27,18 @@ jobs:
         run: |
           INPUT_VER="${{ github.event.inputs.new_version }}"
           if [ -z "$INPUT_VER" ]; then
-            VERSION=$(grep 'PKG_VERSION:=' luci-app-netwiz/Makefile | cut -d'=' -f2 | tr -d ' ')
-            echo "pkg_version=$VERSION" >> $GITHUB_OUTPUT
+            # 🌟 升級版：兼容 Makefile 中有空格的情況，並同時提取 VERSION 和 RELEASE
+            PKG_VER=$(grep -m 1 -E '^PKG_VERSION[ \t]*:?=' luci-app-netwiz/Makefile | cut -d '=' -f 2 | tr -d ' \t"')
+            PKG_REL=$(grep -m 1 -E '^PKG_RELEASE[ \t]*:?=' luci-app-netwiz/Makefile | cut -d '=' -f 2 | tr -d ' \t"')
+            
+            # 如果有 Release，就拼接起來 (例如 1.0.0-1)
+            if [ -n "$PKG_REL" ]; then
+               FULL_VER="${PKG_VER}-${PKG_REL}"
+            else
+               FULL_VER="${PKG_VER}"
+            fi
+            
+            echo "pkg_version=$FULL_VER" >> $GITHUB_OUTPUT
             echo "skip_build=false" >> $GITHUB_OUTPUT
           else
             # ... 版本更新 ...
@@ -52,7 +62,7 @@ jobs:
       - name: Checkout Source Code
         uses: actions/checkout@v4
 
-      - name: 隔离与修正路径
+      - name: 隔离与修正路径并注入版本号
         run: |
           mkdir -p /tmp/pure_plugin
           cp -r luci-app-netwiz /tmp/pure_plugin/
@@ -67,9 +77,23 @@ jobs:
           chmod +x luci-app-netwiz/root/etc/init.d/netwiz-monitor
           chmod +x luci-app-netwiz/root/etc/init.d/netwiz-recovery
           
-          # 🌟【新增】自动提取版本号并注入前端 js
-          echo "🏷️ 正在将版本号 v${{ needs.prepare.outputs.pkg_version }} 注入前端..."
-          sed -i "s/{{APP_VERSION}}/v${{ needs.prepare.outputs.pkg_version }}/g" luci-app-netwiz/htdocs/luci-static/resources/view/netwiz.js
+          # 自动提取版本号并注入前端 js
+          echo "🏷️ 准备将版本号 v${{ needs.prepare.outputs.pkg_version }} 注入前端..."
+          JS_FILE="luci-app-netwiz/htdocs/luci-static/resources/view/netwiz.js"
+          
+          if [ -f "$JS_FILE" ]; then
+            echo "✅ 找到目标文件。注入前状态："
+            grep "{{APP_VERSION}}" "$JS_FILE" || echo "⚠️ 警告：文件中没有找到 {{APP_VERSION}} 占位符！"
+            
+            # 执行替换
+            sed -i "s/{{APP_VERSION}}/v${{ needs.prepare.outputs.pkg_version }}/g" "$JS_FILE"
+            
+            echo "✅ 注入完成。注入后状态："
+            grep "nw-version-tag" "$JS_FILE"
+          else
+            echo "❌ 找不到目标 JS 文件！路径错误！请检查 htdocs 目录结构。"
+            exit 1
+          fi
 
       - name: 编译
         uses: sbwml/openwrt-gh-action-sdk@main   
