@@ -65,6 +65,7 @@ jobs:
           chmod +x luci-app-netwiz/root/usr/libexec/netwiz-autodetect.sh
           chmod +x luci-app-netwiz/root/usr/libexec/netwiz-monitor-loop.sh
           chmod +x luci-app-netwiz/root/etc/init.d/netwiz-monitor
+          chmod +x luci-app-netwiz/root/etc/init.d/netwiz-recovery
           
           # 🌟【新增】自动提取版本号并注入前端 js
           echo "🏷️ 正在将版本号 v${{ needs.prepare.outputs.pkg_version }} 注入前端..."
