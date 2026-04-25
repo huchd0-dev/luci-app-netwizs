@@ -548,37 +548,34 @@ return view.extend({
                     // 初始化优雅的等待 UI
                     var msgHtml = '<div style="font-size: 16px; margin-bottom: 12px;">' + T['LBL_TARGET'] + ' <b style="color:#3b82f6; font-size: 18px;">' + a1 + '</b></div>' +
                                   '<div id="nw-status-text" style="color: #10b981; font-size: 16px; font-weight: bold; margin-bottom: 10px;">' + T['MSG_WRITING'] + '</div>' +
-                                  '<div id="nw-timer-text" style="color: #64748b; font-size: 14px; font-weight: bold;">正在准备环境...</div>';
+                                  '<div id="nw-timer-text" style="color: #64748b; font-size: 14px; font-weight: bold;">' + T['MSG_PREP_ENV'] + '</div>';
                     document.getElementById('nw-global-msg').innerHTML = msgHtml;
 
                     var countdownTimer = setInterval(function() {
                         sec += 2;
                         
                         if (sec <= bombTime) {
-                            document.getElementById('nw-timer-text').innerHTML = '防失联倒计时：<b style="color:#f59e0b;">' + sec + '</b> / ' + bombTime + ' 秒';
+                            // 动态倒计时
+                            document.getElementById('nw-timer-text').innerHTML = T['MSG_TIMER'].replace('{sec}', sec).replace('{total}', bombTime);
                             
-                            // 延时 8 秒后开始探测（给路由器留出重启 network 服务的时间）
+                            // 延时 8 秒后开始探测
                             if (sec >= 8) {
                                 document.getElementById('nw-status-text').innerHTML = '<span style="color:#f59e0b;">' + T['MSG_KNOCKING'].replace('{sec}', sec) + '</span>';
                                 
-                                // 单连接，不会触发后端拆弹)
                                 fetch('http://' + a1 + '/luci-static/resources/view/netwiz.js?v=' + Date.now(), { mode: 'no-cors', cache: 'no-store' })
                                 .then(function() {
                                     clearInterval(countdownTimer);
                                     
-                                    // 准备跳转
-                                    document.getElementById('nw-status-text').innerHTML = '<span style="color:#3b82f6;">网络已连通！正在为您自动跳转...</span>';
-                                    document.getElementById('nw-timer-text').innerHTML = '✅ 侦察握手成功';
+                                    // 侦察兵汇报成功，替换纯文本状态
+                                    document.getElementById('nw-status-text').innerHTML = '<span style="color:#3b82f6;">' + T['MSG_REDIRECTING'] + '</span>';
+                                    document.getElementById('nw-timer-text').innerHTML = T['MSG_SCOUT_OK'];
                                     
-                                    // 延时 1 秒跳转，让用户看清“成功”的提示，体验极致丝滑
                                     setTimeout(function() {
                                         window.location.href = 'http://' + a1 + '/cgi-bin/luci/';
                                     }, 1000);
-                                }).catch(function() {
-                                    // 还没通，继续等
-                                });
+                                }).catch(function() {});
                             }
-                        } 
+                        }
                         else {
                             // 120秒真失联，执行前端回退 UI
                             clearInterval(countdownTimer);
