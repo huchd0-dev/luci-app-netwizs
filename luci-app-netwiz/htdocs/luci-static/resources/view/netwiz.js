@@ -547,29 +547,34 @@ return view.extend({
                         var elapsed = Date.now() - start;
                         sec += 2;
                         
+                        // 更新进度提示
                         var knockingMsg = '<div style="font-size: 16px; margin-bottom: 10px;">' + T['LBL_TARGET'] + ' <b style="color:#3b82f6;">' + a1 + '</b></div><div style="color: #10b981; font-size: 16px; font-weight: bold;">' + T['MSG_KNOCKING'].replace('{sec}', sec) + '</div>';
                         document.getElementById('nw-global-msg').innerHTML = knockingMsg;
 
+                        // 1. 在 120 秒炸弹时间内，持续探活
                         if (elapsed < bombTime) {
-                            // 探活与自动取消定时装置逻辑
                             fetch('http://' + a1 + '/luci-static/resources/view/netwiz.js?v=' + ts, { mode: 'no-cors', cache: 'no-store' })
                             .then(function() {
                                 clearInterval(checkNewIpTimer);
                                 
-                                // 探活成功！显示正在取消定时装置的提示
+                                // 提示用户新 IP 已通，正在最后确认
                                 document.getElementById('nw-global-msg').innerHTML = '<div style="font-size: 16px; margin-bottom: 10px;">' + T['LBL_TARGET'] + ' <b style="color:#3b82f6;">' + a1 + '</b></div><div style="color: #f59e0b; font-size: 16px; font-weight: bold;">' + T['MSG_DEFUSING'] + '</div>';
                                 
-                                // 强制前端发送 confirm RPC 指令，让后端拆除 120 秒回退定时装置
-                                // 如果这行代码因为网络策略没发出去，后端的 netstat 并发雷达作为保底，会在跳转后触发
+                                // 主动发送拆弹 RPC。注意：由于新旧 IP 登录凭证可能不通用，这里 catch 极其重要！
                                 callNetDefuse().then(function() {
-                                    // 取消定时装置指令发送成功，跳转到新地址
                                     window.location.href = 'http://' + a1 + '/cgi-bin/luci/';
                                 }).catch(function() {
-                                    // 即使 RPC 失败，也强行跳转，后端的并发雷达保底
+                                    // 重点：即便 RPC 因为没登录被拒绝，也要强行跳转
+                                    // 只要页面一加载，后端 netstat 雷达就会瞬间抓到连接并拆弹
                                     window.location.href = 'http://' + a1 + '/cgi-bin/luci/';
                                 });
-                            }).catch(function() {});
-                        } else {
+                            })
+                            .catch(function() {
+                                // 还没通，保持沉默，等待下一个 2 秒周期
+                            });
+                        } 
+                        // 2. 超过 120 秒未成功，执行前端回滚提示逻辑
+                        else {
                             clearInterval(checkNewIpTimer);
                             var rollbackSec = 0;
                             var checkOldIpTimer = setInterval(function() {
