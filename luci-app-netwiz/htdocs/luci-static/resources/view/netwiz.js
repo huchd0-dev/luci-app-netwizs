@@ -534,64 +534,26 @@ return view.extend({
             
             var start = Date.now(), done = false;
             
-            // 3. 异步探测与秒表读秒逻辑
+            // 3. 异步跳转逻辑
             var succ = function() {
-                var h = window.location.hostname, ts = new Date().getTime();
+                var h = window.location.hostname;
                 var sec = 0;
                 
                 if (selectedMode === 'lan' && a1 && a1 !== h) { 
-                    var bombTime = 120 * 1000; 
-                    var checkInterval = 2000;  
+                    // 🌟 终极逻辑：取消所有后台探活，采用倒计时 15 秒强制盲跳
+                    var countdownTimer = setInterval(function() {
+                        sec++;
+                        var msgHtml = '<div style="font-size: 16px; margin-bottom: 15px;">' + T['LBL_TARGET'] + ' <b style="color:#3b82f6;">' + a1 + '</b></div>' +
+                                      '<div style="color: #10b981; font-size: 16px; font-weight: bold; margin-bottom: 10px;">配置已写入，正在重启网络服务...</div>' +
+                                      '<div style="color: #475569; font-size: 14px;">将在 <b style="color:#ef4444; font-size: 16px;">' + (15 - sec) + '</b> 秒后自动尝试跳转到新地址</div>';
+                        document.getElementById('nw-global-msg').innerHTML = msgHtml;
 
-                    var checkNewIpTimer = setInterval(function() {
-                        var elapsed = Date.now() - start;
-                        sec += 2;
-                        
-                        // 更新进度提示
-                        var knockingMsg = '<div style="font-size: 16px; margin-bottom: 10px;">' + T['LBL_TARGET'] + ' <b style="color:#3b82f6;">' + a1 + '</b></div><div style="color: #10b981; font-size: 16px; font-weight: bold;">' + T['MSG_KNOCKING'].replace('{sec}', sec) + '</div>';
-                        document.getElementById('nw-global-msg').innerHTML = knockingMsg;
-
-                        // 1. 在 120 秒炸弹时间内，持续探活
-                        if (elapsed < bombTime) {
-                            fetch('http://' + a1 + '/luci-static/resources/view/netwiz.js?v=' + ts, { mode: 'no-cors', cache: 'no-store' })
-                            .then(function() {
-                                clearInterval(checkNewIpTimer);
-                                
-                                // 提示用户新 IP 已通，正在最后确认
-                                document.getElementById('nw-global-msg').innerHTML = '<div style="font-size: 16px; margin-bottom: 10px;">' + T['LBL_TARGET'] + ' <b style="color:#3b82f6;">' + a1 + '</b></div><div style="color: #f59e0b; font-size: 16px; font-weight: bold;">' + T['MSG_DEFUSING'] + '</div>';
-                                
-                                // 主动发送拆弹 RPC。注意：由于新旧 IP 登录凭证可能不通用，这里 catch 极其重要！
-                                callNetDefuse().then(function() {
-                                    window.location.href = 'http://' + a1 + '/cgi-bin/luci/';
-                                }).catch(function() {
-                                    // 重点：即便 RPC 因为没登录被拒绝，也要强行跳转
-                                    // 只要页面一加载，后端 netstat 雷达就会瞬间抓到连接并拆弹
-                                    window.location.href = 'http://' + a1 + '/cgi-bin/luci/';
-                                });
-                            })
-                            .catch(function() {
-                                // 还没通，保持沉默，等待下一个 2 秒周期
-                            });
-                        } 
-                        // 2. 超过 120 秒未成功，执行前端回滚提示逻辑
-                        else {
-                            clearInterval(checkNewIpTimer);
-                            var rollbackSec = 0;
-                            var checkOldIpTimer = setInterval(function() {
-                                rollbackSec += 2;
-                                var rollbackHtml = '<div style="color:#ef4444; font-weight:bold; font-size:15px; margin-bottom:10px;">' + T['M_SUCC_ROLLBACK'] + '</div><div style="font-size:16px; color:#666; font-weight:bold;">' + T['MSG_WAIT_OLD'].replace('{sec}', rollbackSec) + '</div>';
-                                document.getElementById('nw-global-title').innerHTML = T['M_RST_TIT'];
-                                document.getElementById('nw-global-msg').innerHTML = rollbackHtml;
-
-                                fetch('http://' + h + '/cgi-bin/luci/?v=' + Date.now(), { mode: 'no-cors', cache: 'no-store' })
-                                .then(function() {
-                                    clearInterval(checkOldIpTimer);
-                                    window.location.reload();
-                                }).catch(function() {});
-                            }, 2000);
+                        if (sec >= 15) {
+                            clearInterval(countdownTimer);
+                            // 直接跳转！落地后产生的真实浏览器连接，才是触发后端雷达拆弹的唯一信号！
+                            window.location.href = 'http://' + a1 + '/cgi-bin/luci/';
                         }
-                    }, checkInterval);
-
+                    }, 1000);
                 } else { 
                     var checkSameTimer = setInterval(function() {
                         sec += 2;
