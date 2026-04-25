@@ -166,8 +166,8 @@ return view.extend({
 
         var htmlTemplate = [
             '<style>',
-            'html, body { overflow-y: scroll !important; scrollbar-gutter: stable; width: 100%; }',
-            '.nw-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 80vh; padding-top: 10vh; padding-bottom: 10vh; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }',
+            'html, body, .main-right, #maincontent { overflow-y: scroll !important; scrollbar-gutter: stable; }',
+            '.nw-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 101vh; padding-top: 10vh; padding-bottom: 10vh; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }',
             '.nw-header { text-align: center; margin-bottom: 40px; background-color: #5e72e4; padding: 25px; margin-top: -90px; border-radius: 0 0 15px 15px; position: relative; }',
             '.nw-main-title { font-size: 35px; font-weight: 600; margin-bottom: 10px; color: #ffffff; letter-spacing: 2px; }',
 
@@ -511,7 +511,7 @@ return view.extend({
 
             var initMsg = '<div style="font-size: 16px; margin-bottom: 10px;">' + T['LBL_TARGET'] + ' ' + actionDetail + '</div><div style="color: #64748b; font-size: 16px;">' + T['MSG_WRITING'] + '</div>';
             
-            // 此处开启了全局大 Loading 动画
+            // 🌟 开启全局顶部 Loading 动画
             openModal({ title: dynamicTitle, msg: initMsg, spin: true });
             
             var start = Date.now(), done = false;
@@ -524,7 +524,7 @@ return view.extend({
                     var bombTime = 120, isProbing = false;
 
                     if (a5 === '1') {
-                        // 开关【关闭】：防失联机制生效
+                        // 🟢 开关【关闭】：防失联机制生效
                         var msgHtml = 
                             '<div style="font-size: 16px; margin-bottom: 12px;">' + T['LBL_TARGET'] + ' <b style="color:#3b82f6; font-size: 18px;">' + a1 + '</b></div>' +
                             '<div id="nw-status-text" style="color: #10b981; font-size: 16px; font-weight: bold; margin-bottom: 10px;">' + T['MSG_WRITING'] + '</div>' +
@@ -574,7 +574,8 @@ return view.extend({
                         // 🔴 开关【开启】：强制直接生效，不防失联
                         var offHtml = 
                             '<div style="font-size: 16px; margin-bottom: 12px;">' + T['LBL_TARGET'] + ' <b style="color:#3b82f6; font-size: 18px;">' + a1 + '</b></div>' +
-                            '<div style="color: #ef4444; font-size: 16px; font-weight: bold; margin-bottom: 10px;">' + T['MSG_SAFE_OFF'] + '</div>' +
+                            // 🌟 剔除了多余的小转圈
+                            '<div style="color: #ef4444; font-size: 16px; font-weight: bold; margin-bottom: 10px; margin-top:20px;">' + T['MSG_SAFE_OFF'] + '</div>' +
                             '<div style="color:#64748b; font-size:13px; line-height:1.6; margin-top:10px;">' + T['MSG_MANUAL_VISIT'] + '<br><br><a href="http://' + a1 + '/cgi-bin/luci/" style="color:#10b981; font-weight:bold; font-size:16px;">http://' + a1 + '</a></div>';
                         document.getElementById('nw-global-msg').innerHTML = offHtml;
                         
