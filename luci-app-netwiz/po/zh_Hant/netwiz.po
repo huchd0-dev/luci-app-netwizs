@@ -73,6 +73,9 @@ msgstr "請輸入寬頻密碼"
 msgid "Configure LAN"
 msgstr "設定區域網路 (LAN)"
 
+msgid "Bypass Safe Mode(Recommended OFF)"
+msgstr "繞過安全模式 (建議關閉，防失聯)"
+
 msgid "Enable Bypass Mode"
 msgstr "啟用旁路由模式"
 
