@@ -35,7 +35,7 @@ var T = {
     'LBL_PASS': _('PPPoE Password'),
     'PH_PASS': _('Enter PPPoE password'),
     'TITLE_LAN': _('Configure LAN'),
-    'LBL_FORCE_APPLY': _('Apply Immediately (Bypass Safe Mode)'),
+    'LBL_FORCE_APPLY': _('Bypass Safe Mode(Recommended OFF)'),
     'DESC_FORCE_APPLY': _('If enabled, the 120s rollback timer is bypassed, and changes apply immediately.'),
     'MSG_SAFE_OFF': _('Safe mode bypassed. Applying immediately...'),
     'LBL_BYPASS': _('Enable Bypass Mode'),
