@@ -113,6 +113,7 @@ var T = {
     'M_SYS_MSG': _('Cannot read underlying config for validation, please refresh.'),
     'M_APP_TIT': _('Applying Config'),
     'M_APP_MSG': _('Writing request, please wait...'),
+    'M_SUCC_TIT': _('Config Applied'),
     'M_RST_TIT': _('Applying Configuration'),
     'M_FAIL_TIT': _('❌ Write Failed'),
     'M_FAIL_MSG': _('Underlying call exception, please try logging in again.'),
@@ -145,7 +146,6 @@ var callNetDefuse = rpc.declare({ object: 'netwiz', method: 'confirm', expect: {
 var getWanStatus = rpc.declare({ object: 'network.interface', method: 'dump', expect: { '': {} } });
 
 return view.extend({
-    // 原生三個按鈕
     handleSaveApply: null,
     handleSave: null,
     handleReset: null,
@@ -162,7 +162,6 @@ return view.extend({
 
         var htmlTemplate = [
             '<style>',
-            // 強制出現滚动条佔位
             'html, body, #maincontent, .main-right { overflow-y: scroll !important; scrollbar-gutter: stable !important; }',
             '.nw-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 101vh; padding-top: 10vh; padding-bottom: 10vh; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }',
             '.nw-header { text-align: center; margin-bottom: 40px; background-color: #5e72e4; padding: 25px; margin-top: -90px; border-radius: 0 0 15px 15px; position: relative; }',
@@ -177,9 +176,9 @@ return view.extend({
             '.nw-card-group { display: flex; gap: 40px; justify-content: center; flex-wrap: wrap; margin-top: 20px; }',
             '.nw-card { width: 210px; padding: 40px 20px; border-radius: 16px; cursor: pointer; backdrop-filter: blur(12px); border: 1px solid rgba(0,0,0,0.03); box-shadow: 0px 0px 15px 2px #b7b7b7; transition: all 0.25s ease; display: flex; flex-direction: column; align-items: center; box-sizing: border-box; }',
             '.nw-card:hover { transform: translateY(-5px); }',
-            '.nw-card[data-mode=\"router\"] { background: rgba(79, 150, 101, 0.85); }',
-            '.nw-card[data-mode=\"pppoe\"] { background: rgba(80, 0, 183, 0.85); }',
-            '.nw-card[data-mode=\"lan\"] { background: rgba(245, 54, 92, 0.85); }',
+            '.nw-card[data-mode="router"] { background: rgba(79, 150, 101, 0.85); }',
+            '.nw-card[data-mode="pppoe"] { background: rgba(80, 0, 183, 0.85); }',
+            '.nw-card[data-mode="lan"] { background: rgba(245, 54, 92, 0.85); }',
             '.nw-badge { width: 54px; height: 54px; line-height: 54px; border-radius: 50%; font-size: 20px; font-weight: bold; margin-bottom: 20px; }',
             '.nw-badge-dhcp { background: #e0f2fe; color: #0284c7; }',
             '.nw-badge-pppoe { background: #f3e8ff; color: #9333ea; }',
@@ -194,7 +193,7 @@ return view.extend({
             '.nw-form-area .nw-value { border: none !important; padding: 12px 0 !important; display: flex !important; flex-direction: column !important; width: 100% !important; margin: 0 !important; background: transparent !important; }',
             '.nw-form-area .nw-value-title { text-align: left !important; font-weight: 600 !important; color: #334155 !important; font-size: 14.5px !important; margin: 0 0 10px 4px !important; line-height: 1.2 !important; display: block !important; padding: 0 !important; width: auto !important; float: none !important; }',
             '.nw-form-area .nw-value-field { width: 100% !important; margin: 0 !important; padding: 0 !important; display: block !important; float: none !important; }',
-            '.nw-form-area input[type=\"text\"], .nw-form-area input[type=\"password\"] { appearance: none !important; width: 100% !important; box-sizing: border-box !important; padding: 14px 16px !important; border: 1px solid #cbd5e1 !important; border-radius: 8px !important; font-size: 15px !important; outline: none !important; background: #f8fafc !important; color: #0f172a !important; height: auto !important; min-height: 48px !important; line-height: normal !important; box-shadow: inset 0 1px 2px rgba(0,0,0,0.02) !important; margin: 0 !important; transition: all 0.2s ease !important; display: block !important; }',
+            '.nw-form-area input[type="text"], .nw-form-area input[type="password"] { appearance: none !important; width: 100% !important; box-sizing: border-box !important; padding: 14px 16px !important; border: 1px solid #cbd5e1 !important; border-radius: 8px !important; font-size: 15px !important; outline: none !important; background: #f8fafc !important; color: #0f172a !important; height: auto !important; min-height: 48px !important; line-height: normal !important; box-shadow: inset 0 1px 2px rgba(0,0,0,0.02) !important; margin: 0 !important; transition: all 0.2s ease !important; display: block !important; }',
             '.nw-form-area input:focus { border-color: #3b82f6 !important; background: #ffffff !important; box-shadow: 0 0 0 3px rgba(59,130,246,0.15) !important; }',
             '.nw-actions { margin-top: 35px; display: flex; justify-content: center; gap: 15px; }',
             '.nw-actions button { appearance: none !important; border-radius: 8px !important; padding: 12px 28px !important; font-weight: 600 !important; font-size: 15px !important; cursor: pointer !important; border: none !important; min-width: 120px !important; outline: none !important; height: auto !important; line-height: normal !important; margin: 0 !important; box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important; transition: transform 0.1s, background 0.2s !important; }',
@@ -202,11 +201,11 @@ return view.extend({
             '.nw-actions .cbi-button-reset { background: #f43f5e !important; color: #fff !important; }',
             '.nw-radio-group { display: flex; gap: 24px; font-size: 15px; color: #333; align-items: center; margin: 0; padding: 0; }',
             '.nw-radio-group label { cursor: pointer; display: flex; align-items: center; gap: 6px; margin: 0 !important; padding: 0 !important; height: 20px; line-height: 1 !important; font-weight: normal; }',
-            '.nw-radio-group input[type=\"radio\"] { margin: 0 !important; padding: 0 !important; cursor: pointer; width: 16px !important; height: 16px !important; position: relative; top: 0; appearance: auto !important; }',
+            '.nw-radio-group input[type="radio"] { margin: 0 !important; padding: 0 !important; cursor: pointer; width: 16px !important; height: 16px !important; position: relative; top: 0; appearance: auto !important; }',
             '.nw-switch { position: relative; display: inline-block; width: 46px; height: 24px; margin: 0; }',
             '.nw-switch input { opacity: 0; width: 0; height: 0; }',
             '.nw-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .3s; border-radius: 24px; }',
-            '.nw-slider:before { position: absolute; content: \"\"; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }',
+            '.nw-slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }',
             'input:checked + .nw-slider { background-color: #ef4444; }',
             'input:checked + .nw-slider:before { transform: translateX(22px); }',
             '#nw-global-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.65); z-index: 999999; display: flex; align-items: center; justify-content: center; }',
@@ -228,106 +227,104 @@ return view.extend({
             '  .nw-actions button { flex: 1 !important; padding: 12px 0 !important; }',
             '}',
             '</style>',
-
-            '<div class=\"nw-wrapper\">',
-            '  <div class=\"nw-header\">',
-            '    <div class=\"nw-title-wrap\">',
-            '      <div class=\"nw-main-title\">{{TITLE}}</div>',
-            '      <div class=\"nw-version-tag\">{{APP_VERSION}} <div class=\"nw-version-dot\" style=\"display: none;\"></div></div>',
+            '<div class="nw-wrapper">',
+            '  <div class="nw-header">',
+            '    <div class="nw-title-wrap">',
+            '      <div class="nw-main-title">{{TITLE}}</div>',
+            '      <div class="nw-version-tag">{{APP_VERSION}} <div class="nw-version-dot" style="display: none;"></div></div>',
             '    </div>',
             '    <p>{{SUBTITLE}}</p>',
             '  </div>',
-            '  <div id=\"nw-global-modal\" style=\"display:none;\">',
-            '    <div class=\"nw-modal-box\">',
-            '      <div id=\"nw-global-spinner\" class=\"nw-spinner\" style=\"display:none;\"></div>',
-            '      <h3 id=\"nw-global-title\"></h3>',
-            '      <p id=\"nw-global-msg\"></p>',
-            '      <div id=\"nw-global-btn-wrap\" style=\"display:flex; gap:15px; width:100%; margin-top:25px;\">',
-            '        <button id=\"nw-global-btn-cancel\" class=\"nw-modal-btn-cancel\" style=\"display:none;\"></button>',
-            '        <button id=\"nw-global-btn-ok\" class=\"nw-modal-btn-ok\" style=\"display:none;\"></button>',
+            '  <div id="nw-global-modal" style="display:none;">',
+            '    <div class="nw-modal-box">',
+            '      <div id="nw-global-spinner" class="nw-spinner" style="display:none;"></div>',
+            '      <h3 id="nw-global-title"></h3>',
+            '      <p id="nw-global-msg"></p>',
+            '      <div id="nw-global-btn-wrap" style="display:flex; gap:15px; width:100%; margin-top:25px;">',
+            '        <button id="nw-global-btn-cancel" class="nw-modal-btn-cancel" style="display:none;"></button>',
+            '        <button id="nw-global-btn-ok" class="nw-modal-btn-ok" style="display:none;"></button>',
             '      </div>',
             '    </div>',
             '  </div>',
-            '  <div id=\"step-1\" class=\"nw-step\">',
-            '    <div class=\"nw-card-group\">',
-            '      <div class=\"nw-card\" data-mode=\"router\"><div class=\"nw-badge nw-badge-dhcp\">🌐</div>',
-            '        <div class=\"nw-card-title\">{{MODE_ROUTER_TITLE}}</div><span>{{MODE_ROUTER_DESC}}</span></div>',
-            '      <div class=\"nw-card\" data-mode=\"pppoe\"><div class=\"nw-badge nw-badge-pppoe\">🔑</div>',
-            '        <div class=\"nw-card-title\">{{MODE_PPPOE_TITLE}}</div><span>{{MODE_PPPOE_DESC}}</span></div>',
-            '      <div class=\"nw-card\" data-mode=\"lan\"><div class=\"nw-badge nw-badge-bypass\">💻</div>',
-            '        <div class=\"nw-card-title\">{{MODE_LAN_TITLE}}</div><span>{{MODE_LAN_DESC}}</span></div>',
+            '  <div id="step-1" class="nw-step">',
+            '    <div class="nw-card-group">',
+            '      <div class="nw-card" data-mode="router"><div class="nw-badge nw-badge-dhcp">🌐</div>',
+            '        <div class="nw-card-title">{{MODE_ROUTER_TITLE}}</div><span>{{MODE_ROUTER_DESC}}</span></div>',
+            '      <div class="nw-card" data-mode="pppoe"><div class="nw-badge nw-badge-pppoe">🔑</div>',
+            '        <div class="nw-card-title">{{MODE_PPPOE_TITLE}}</div><span>{{MODE_PPPOE_DESC}}</span></div>',
+            '      <div class="nw-card" data-mode="lan"><div class="nw-badge nw-badge-bypass">💻</div>',
+            '        <div class="nw-card-title">{{MODE_LAN_TITLE}}</div><span>{{MODE_LAN_DESC}}</span></div>',
             '    </div>',
-            '    <div id=\"current-mode-display\" style=\"margin-top: 45px; background: #5e72e4; padding: 20px 35px; border-radius: 12px; display: inline-block; box-shadow: 0 8px 20px rgba(94, 114, 228, 0.3); text-align: center; min-width: 320px;\">',
-            '       <div id=\"current-mode-text\" style=\"color: #fff;\"><div class=\"nw-spinner\" style=\"width:30px; height:30px; border-width:3px; margin: 0 auto; border-top-color: #fff;\"></div><div style=\"margin-top:10px; font-size:15px; font-weight:bold; color:#fff;\">{{LOADING_CONFIG}}</div></div>',
+            '    <div id="current-mode-display" style="margin-top: 45px; background: #5e72e4; padding: 20px 35px; border-radius: 12px; display: inline-block; box-shadow: 0 8px 20px rgba(94, 114, 228, 0.3); text-align: center; min-width: 320px;">',
+            '       <div id="current-mode-text" style="color: #fff;"><div class="nw-spinner" style="width:30px; height:30px; border-width:3px; margin: 0 auto; border-top-color: #fff;"></div><div style="margin-top:10px; font-size:15px; font-weight:bold; color:#fff;">{{LOADING_CONFIG}}</div></div>',
             '    </div>',
             '  </div>',
-            '  <div id=\"step-2\" class=\"nw-step\" style=\"display: none;\">',
-            '    <div class=\"nw-form-area\">',
-            '      <div class=\"nw-top-back\" id=\"top-back-1\" title=\"{{BTN_HOME}}\">',
-            '         <svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><line x1=\"19\" y1=\"12\" x2=\"5\" y2=\"12\"></line><polyline points=\"12 19 5 12 12 5\"></polyline></svg>',
+            '  <div id="step-2" class="nw-step" style="display: none;">',
+            '    <div class="nw-form-area">',
+            '      <div class="nw-top-back" id="top-back-1" title="{{BTN_HOME}}">',
+            '         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>',
             '      </div>',
-            '      <div id=\"fields-router\" style=\"display: none;\">',
-            '        <div class=\"nw-step-title\">{{TITLE_WAN}}</div>',
-            '        <div style=\"display: flex; align-items: center; width: 100%; padding: 15px 0;\">',
-            '          <div style=\"font-weight: 600; color: #222; font-size: 16px; margin-right: 35px; line-height: 1;\">{{LBL_CONN_TYPE}}</div>',
-            '          <div class=\"nw-radio-group\">',
-            '            <label><input type=\"radio\" name=\"router_type\" value=\"dhcp\" checked> {{OPT_DHCP}}</label>',
-            '            <label><input type=\"radio\" name=\"router_type\" value=\"static\"> {{OPT_STATIC}}</label>',
+            '      <div id="fields-router" style="display: none;">',
+            '        <div class="nw-step-title">{{TITLE_WAN}}</div>',
+            '        <div style="display: flex; align-items: center; width: 100%; padding: 15px 0;">',
+            '          <div style="font-weight: 600; color: #222; font-size: 16px; margin-right: 35px; line-height: 1;">{{LBL_CONN_TYPE}}</div>',
+            '          <div class="nw-radio-group">',
+            '            <label><input type="radio" name="router_type" value="dhcp" checked> {{OPT_DHCP}}</label>',
+            '            <label><input type="radio" name="router_type" value="static"> {{OPT_STATIC}}</label>',
             '          </div>',
             '        </div>',
-            '        <div id=\"router-static-fields\" style=\"display: none; margin-top: 10px; border-top: 1px dashed #e5e7eb; padding-top: 15px;\">',
-            '          <div class=\"nw-value\"><label class=\"nw-value-title\">{{LBL_IP}}</label><div class=\"nw-value-field\"><input type=\"text\" id=\"router-ip\" placeholder=\"{{PH_IP}}\" autocomplete=\"new-password\"></div></div>',
-            '          <div class=\"nw-value\"><label class=\"nw-value-title\">{{LBL_GW}}</label><div class=\"nw-value-field\"><input type=\"text\" id=\"router-gw\" placeholder=\"{{PH_GW}}\" autocomplete=\"new-password\"></div></div>',
+            '        <div id="router-static-fields" style="display: none; margin-top: 10px; border-top: 1px dashed #e5e7eb; padding-top: 15px;">',
+            '          <div class="nw-value"><label class="nw-value-title">{{LBL_IP}}</label><div class="nw-value-field"><input type="text" id="router-ip" placeholder="{{PH_IP}}" autocomplete="new-password"></div></div>',
+            '          <div class="nw-value"><label class="nw-value-title">{{LBL_GW}}</label><div class="nw-value-field"><input type="text" id="router-gw" placeholder="{{PH_GW}}" autocomplete="new-password"></div></div>',
             '        </div>',
             '      </div>',
-            '      <div id=\"fields-pppoe\" style=\"display: none;\">',
-            '        <div class=\"nw-step-title\">{{TITLE_PPPOE}}</div>',
-            '        <div class=\"nw-value\"><label class=\"nw-value-title\">{{LBL_USER}}</label><div class=\"nw-value-field\"><input type=\"text\" id=\"pppoe-user\" placeholder=\"{{PH_USER}}\" autocomplete=\"new-password\"></div></div>',
-            '        <div class=\"nw-value\"><label class=\"nw-value-title\">{{LBL_PASS}}</label><div class=\"nw-value-field\"><input type=\"password\" id=\"pppoe-pass\" placeholder=\"{{PH_PASS}}\" autocomplete=\"new-password\"></div></div>',
+            '      <div id="fields-pppoe" style="display: none;">',
+            '        <div class="nw-step-title">{{TITLE_PPPOE}}</div>',
+            '        <div class="nw-value"><label class="nw-value-title">{{LBL_USER}}</label><div class="nw-value-field"><input type="text" id="pppoe-user" placeholder="{{PH_USER}}" autocomplete="new-password"></div></div>',
+            '        <div class="nw-value"><label class="nw-value-title">{{LBL_PASS}}</label><div class="nw-value-field"><input type="password" id="pppoe-pass" placeholder="{{PH_PASS}}" autocomplete="new-password"></div></div>',
             '      </div>',
-            '      <div id=\"fields-lan\" style=\"display: none;\">',
-            '        <div class=\"nw-step-title\">{{TITLE_LAN}}</div>',
-            '        <div style=\"display: flex; align-items: center; justify-content: space-between; padding: 15px 0; border-bottom: 1px solid #f1f5f9; margin-bottom: 15px;\">',
-            '           <div style=\"font-weight: 600; color: #222; font-size: 16px;\">{{LBL_BYPASS}}</div>',
-            '           <label class=\"nw-switch\"><input type=\"checkbox\" id=\"lan-bypass-toggle\"><span class=\"nw-slider\"></span></label>',
+            '      <div id="fields-lan" style="display: none;">',
+            '        <div class="nw-step-title">{{TITLE_LAN}}</div>',
+            '        <div style="display: flex; align-items: center; justify-content: space-between; padding: 15px 0; border-bottom: 1px solid #f1f5f9; margin-bottom: 15px;">',
+            '           <div style="font-weight: 600; color: #222; font-size: 16px;">{{LBL_BYPASS}}</div>',
+            '           <label class="nw-switch"><input type="checkbox" id="lan-bypass-toggle"><span class="nw-slider"></span></label>',
             '        </div>',
-            '        <div id=\"lan-bypass-warning\" style=\"display:none; background: #fef2f2; color: #ef4444; padding: 12px; border-radius: 8px; font-size: 14px; margin-bottom: 15px; border: 1px solid #fecaca; line-height: 1.7; font-weight: bolder;\">{{WARN_BYPASS}}</div>',
-            '        <div id=\"lan-main-warning\" style=\"background: #f0fdf4; color: #059669; padding: 12px; border-radius: 8px; font-size: 14px; margin-bottom: 15px; border: 1px solid #bbf7d0; line-height: 1.7; font-weight: bolder;\">{{WARN_MAIN}}</div>',
-            '        <div class=\"nw-value\"><label class=\"nw-value-title\">{{LBL_LAN_IP}}</label><div class=\"nw-value-field\"><input type=\"text\" id=\"lan-ip\" placeholder=\"{{PH_IP}}\" autocomplete=\"new-password\"></div></div>',
-            '        <div class=\"nw-value\"><label class=\"nw-value-title\">{{LBL_LAN_GW}}</label><div class=\"nw-value-field\"><input type=\"text\" id=\"lan-gw\" placeholder=\"{{PH_LAN_GW}}\" autocomplete=\"new-password\"></div></div>',
-            '        ',
-            '        <div style=\"display: flex; align-items: center; justify-content: space-between; padding: 15px 0 0 0; border-top: 1px solid #f1f5f9; margin-top: 15px;\">',
+            '        <div id="lan-bypass-warning" style="display:none; background: #fef2f2; color: #ef4444; padding: 12px; border-radius: 8px; font-size: 14px; margin-bottom: 15px; border: 1px solid #fecaca; line-height: 1.7; font-weight: bolder;">{{WARN_BYPASS}}</div>',
+            '        <div id="lan-main-warning" style="background: #f0fdf4; color: #059669; padding: 12px; border-radius: 8px; font-size: 14px; margin-bottom: 15px; border: 1px solid #bbf7d0; line-height: 1.7; font-weight: bolder;">{{WARN_MAIN}}</div>',
+            '        <div class="nw-value"><label class="nw-value-title">{{LBL_LAN_IP}}</label><div class="nw-value-field"><input type="text" id="lan-ip" placeholder="{{PH_IP}}" autocomplete="new-password"></div></div>',
+            '        <div class="nw-value"><label class="nw-value-title">{{LBL_LAN_GW}}</label><div class="nw-value-field"><input type="text" id="lan-gw" placeholder="{{PH_LAN_GW}}" autocomplete="new-password"></div></div>',
+            '        <div style="display: flex; align-items: center; justify-content: space-between; padding: 15px 0 0 0; border-top: 1px solid #f1f5f9; margin-top: 15px;">',
             '           <div>',
-            '               <div style=\"font-weight: 600; color: #222; font-size: 16px;\">{{LBL_FORCE_APPLY}}</div>',
-            '               <div style=\"font-size: 12px; color: #64748b; margin-top: 4px;\">{{DESC_FORCE_APPLY}}</div>',
+            '               <div style="font-weight: 600; color: #222; font-size: 16px;">{{LBL_FORCE_APPLY}}</div>',
+            '               <div style="font-size: 12px; color: #64748b; margin-top: 4px;">{{DESC_FORCE_APPLY}}</div>',
             '           </div>',
-            '           <label class=\"nw-switch\"><input type=\"checkbox\" id=\"lan-force-toggle\"><span class=\"nw-slider\"></span></label>',
+            '           <label class="nw-switch"><input type="checkbox" id="lan-force-toggle"><span class="nw-slider"></span></label>',
             '        </div>',
             '      </div>',
             '    </div>',
-            '    <div class=\"nw-actions\"><button id=\"btn-back-1\" class=\"cbi-button cbi-button-reset\">{{BTN_BACK}}</button><button id=\"btn-next-2\" class=\"cbi-button cbi-button-apply\">{{BTN_NEXT}}</button></div>',
+            '    <div class="nw-actions"><button id="btn-back-1" class="cbi-button cbi-button-reset">{{BTN_BACK}}</button><button id="btn-next-2" class="cbi-button cbi-button-apply">{{BTN_NEXT}}</button></div>',
             '  </div>',
-            '  <div id=\"step-3\" class=\"nw-step\" style=\"display: none;\">',
-            '    <div class=\"nw-confirm-board\">',
-            '      <div class=\"nw-top-back\" id=\"top-back-2\" title=\"{{BTN_EDIT}}\">',
-            '         <svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><line x1=\"19\" y1=\"12\" x2=\"5\" y2=\"12\"></line><polyline points=\"12 19 5 12 12 5\"></polyline></svg>',
+            '  <div id="step-3" class="nw-step" style="display: none;">',
+            '    <div class="nw-confirm-board">',
+            '      <div class="nw-top-back" id="top-back-2" title="{{BTN_EDIT}}">',
+            '         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>',
             '      </div>',
-            '      <div class=\"nw-step-title\">{{TITLE_CONFIRM}}</div>',
-            '      <p style=\"color:#555; text-align:center;\">{{DESC_CONFIRM}}</p>',
-            '      <div id=\"confirm-mode-text\" style=\"color: #fff; background: #3b82f6; padding: 20px; border-radius: 12px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); margin-top: 15px;\"></div>',
-            '      <div style=\"background-color: #f8fafc; padding: 15px; font-size: 13.5px; margin-top: 20px; border: 1px solid #e2e8f0; line-height: 1.7; color: #475569; border-radius: 12px;\">',
-            '        <div style=\"font-weight: bold; color: #0f172a; margin-bottom: 8px; font-size: 14.5px;\">{{NOTE_TITLE}}</div>',
-            '        <div style=\"display: flex; gap: 8px;\"><span style=\"color:#3b82f6;\">•</span> <span>{{NOTE_1}}</span></div>',
-            '        <div style=\"display: flex; gap: 8px;\"><span style=\"color:#10b981;\">•</span> <span>{{NOTE_2}}</span></div>',
+            '      <div class="nw-step-title">{{TITLE_CONFIRM}}</div>',
+            '      <p style="color:#555; text-align:center;">{{DESC_CONFIRM}}</p>',
+            '      <div id="confirm-mode-text" style="color: #fff; background: #3b82f6; padding: 20px; border-radius: 12px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); margin-top: 15px;"></div>',
+            '      <div style="background-color: #f8fafc; padding: 15px; font-size: 13.5px; margin-top: 20px; border: 1px solid #e2e8f0; line-height: 1.7; color: #475569; border-radius: 12px;">',
+            '        <div style="font-weight: bold; color: #0f172a; margin-bottom: 8px; font-size: 14.5px;">{{NOTE_TITLE}}</div>',
+            '        <div style="display: flex; gap: 8px;"><span style="color:#3b82f6;">•</span> <span>{{NOTE_1}}</span></div>',
+            '        <div style="display: flex; gap: 8px;"><span style="color:#10b981;">•</span> <span>{{NOTE_2}}</span></div>',
             '      </div>',
             '    </div>',
-            '    <div class=\"nw-actions\"><button id=\"btn-back-2\" class=\"cbi-button cbi-button-reset\">{{BTN_BACK}}</button><button id=\"btn-apply\" class=\"cbi-button cbi-button-apply\">{{BTN_APPLY}}</button></div>',
+            '    <div class="nw-actions"><button id="btn-back-2" class="cbi-button cbi-button-reset">{{BTN_BACK}}</button><button id="btn-apply" class="cbi-button cbi-button-apply">{{BTN_APPLY}}</button></div>',
             '  </div>',
             '</div>'
         ].join('');
 
         for (var k in T) {
-            htmlTemplate = htmlTemplate.replace(new RegExp('\\\\{\\\\{' + k + '\\\\}\\\\}', 'g'), T[k]);
+            htmlTemplate = htmlTemplate.replace(new RegExp('\\{\\{' + k + '\\}\\}', 'g'), T[k]);
         }
         container.innerHTML = htmlTemplate;
         this.bindEvents(container);
@@ -344,7 +341,7 @@ return view.extend({
 
         function updateStatusDisplay(isSilent) {
             try {
-                if (modeTextEl && !isSilent) modeTextEl.innerHTML = \"<div class='nw-spinner' style='width:30px; height:30px; border-width:3px; margin: 0 auto; border-top-color: #fff;'></div><div style='margin-top:10px; font-size:15px; font-weight:bold; color:#fff;'>\" + T['LOADING_CONFIG'] + \"</div>\";
+                if (modeTextEl && !isSilent) modeTextEl.innerHTML = "<div class='nw-spinner' style='width:30px; height:30px; border-width:3px; margin: 0 auto; border-top-color: #fff;'></div><div style='margin-top:10px; font-size:15px; font-weight:bold; color:#fff;'>" + T['LOADING_CONFIG'] + "</div>";
                 try { uci.unload('network'); uci.unload('dhcp'); } catch(e) {}
                 Promise.all([ safePromise(uci.load('network'), null), safePromise(uci.load('dhcp'), null), safePromise(getWanStatus(), {}) ]).then(function(results) {
                     var rawIfaces = results[2] || {}, ifaces = Array.isArray(rawIfaces.interface) ? rawIfaces.interface : (Array.isArray(rawIfaces) ? rawIfaces : []);
@@ -365,13 +362,13 @@ return view.extend({
                     if (container.querySelector('#lan-gw')) container.querySelector('#lan-gw').value = (lGw !== T['TXT_NOT_SET']) ? lGw : '';
                     var bypassToggle = container.querySelector('#lan-bypass-toggle');
                     if (bypassToggle) { bypassToggle.checked = isBypass; container.querySelector('#lan-bypass-warning').style.display = isBypass ? 'block' : 'none'; container.querySelector('#lan-main-warning').style.display = isBypass ? 'none' : 'block'; }
-                    var mkB = function(bg, txt) { return \"<span style='font-size:12px; background:\" + bg + \"; color:#fff; padding:3px 10px; border-radius:12px; white-space:nowrap;'>\" + txt + \"</span>\"; };
-                    var mkD = function(l1, v1, l2, v2) { return \"<span style='white-space:nowrap; margin: 0 10px;'>\" + l1 + \" <span class='nw-hl'>\" + v1 + \"</span></span><span style='white-space:nowrap; margin: 0 10px;'>\" + l2 + \" <span class='nw-hl'>\" + v2 + \"</span></span>\"; };
-                    var sTitle = \"\", sDetails = \"\", statusBadge = \"\";
+                    var mkB = function(bg, txt) { return "<span style='font-size:12px; background:" + bg + "; color:#fff; padding:3px 10px; border-radius:12px; white-space:nowrap;'>" + txt + "</span>"; };
+                    var mkD = function(l1, v1, l2, v2) { return "<span style='white-space:nowrap; margin: 0 10px;'>" + l1 + " <span class='nw-hl'>" + v1 + "</span></span><span style='white-space:nowrap; margin: 0 10px;'>" + l2 + " <span class='nw-hl'>" + v2 + "</span></span>"; };
+                    var sTitle = "", sDetails = "", statusBadge = "";
                     if (isBypass) { sTitle = T['STAT_BYPASS']; sDetails = mkD(T['TXT_DEV_IP'], lIp, T['TXT_UP_GW'], lGw); } else if (wProto === 'pppoe') { sTitle = T['STAT_MAIN_PPPOE']; if (activeWan.up && liveWanIp) { statusBadge = mkB('#10b981', T['BDG_SUCC']); sDetails = mkD(T['TXT_PUB_IP'], liveWanIp, T['TXT_REM_GW'], liveGw); } else { statusBadge = mkB('#ef4444', T['BDG_DIAL']); sDetails = mkD(T['TXT_LAN_IP'], lIp, T['TXT_STATUS'], T['TXT_WAIT_REM']); } } else if (wProto === 'dhcp') { sTitle = T['STAT_SEC_DHCP']; if (activeWan.up && liveWanIp) { statusBadge = mkB('#10b981', T['BDG_GOT']); sDetails = mkD(T['TXT_WAN_IP'], liveWanIp, T['TXT_UP_GW'], liveGw); } else { statusBadge = mkB('#f59e0b', T['BDG_WAIT']); sDetails = mkD(T['TXT_LAN_IP'], lIp, T['TXT_STATUS'], T['TXT_GET_IP']); } } else if (wProto === 'static') { sTitle = T['STAT_SEC_STATIC']; statusBadge = activeWan.up ? mkB('#10b981', T['BDG_CONN']) : mkB('#ef4444', T['BDG_UNPLUG']); sDetails = mkD(T['TXT_WAN_IP'], wIp, T['TXT_UP_GW'], wGw); } else { sTitle = T['STAT_LAN']; sDetails = mkD(T['TXT_LAN_IP'], lIp, T['TXT_DHCP_SRV'], T['TXT_ON']); }
-                    if (modeTextEl) modeTextEl.innerHTML = \"<div style='font-size:17px; font-weight:600; margin-bottom:12px; color:#ffffff; font-family: monospace; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px;'><span style='white-space:nowrap;'>\" + sTitle + \"</span>\" + statusBadge + \"</div>\" + \"<div style='font-size:14.5px; font-weight:bold; color:#ffffff; font-family:monospace; letter-spacing:0.5px; display:flex; flex-wrap:wrap; justify-content:center; line-height: 1.8;'>\" + sDetails + \"</div>\";
-                }).catch(function() { if (modeTextEl) modeTextEl.innerHTML = \"<div style='color:#ef4444; font-weight:bold;'>\" + T['ERR_RD_SYS'] + \"</div>\"; });
-            } catch(e) { if (modeTextEl) modeTextEl.innerHTML = \"<div style='color:#ef4444; font-weight:bold;'>\" + T['ERR_CRASH'] + \"</div>\"; }
+                    if (modeTextEl) modeTextEl.innerHTML = "<div style='font-size:17px; font-weight:600; margin-bottom:12px; color:#ffffff; font-family: monospace; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px;'><span style='white-space:nowrap;'>" + sTitle + "</span>" + statusBadge + "</div>" + "<div style='font-size:14.5px; font-weight:bold; color:#ffffff; font-family:monospace; letter-spacing:0.5px; display:flex; flex-wrap:wrap; justify-content:center; line-height: 1.8;'>" + sDetails + "</div>";
+                }).catch(function() { if (modeTextEl) modeTextEl.innerHTML = "<div style='color:#ef4444; font-weight:bold;'>" + T['ERR_RD_SYS'] + "</div>"; });
+            } catch(e) { if (modeTextEl) modeTextEl.innerHTML = "<div style='color:#ef4444; font-weight:bold;'>" + T['ERR_CRASH'] + "</div>"; }
         }
         updateStatusDisplay(false);
         setInterval(function() { if (step1.style.display !== 'none' && container.querySelector('#nw-global-modal').style.display === 'none') updateStatusDisplay(true); }, 5000);
@@ -381,7 +378,8 @@ return view.extend({
         function isSameSubnet(ip1, ip2) { if (!ip1 || !ip2) return false; var p1 = ip1.split('.'), p2 = ip2.split('.'); return (p1.length === 4 && p2.length === 4 && p1[0] === p2[0] && p1[1] === p2[1] && p1[2] === p2[2]); }
         function openModal(o) { var m = container.querySelector('#nw-global-modal'); container.querySelector('#nw-global-title').innerHTML = o.title || ''; container.querySelector('#nw-global-msg').innerHTML = o.msg || ''; container.querySelector('#nw-global-spinner').style.display = o.spin ? 'block' : 'none'; var w = container.querySelector('#nw-global-btn-wrap'), ok = container.querySelector('#nw-global-btn-ok'), can = container.querySelector('#nw-global-btn-cancel'); w.style.display = (o.okText || o.cancelText) ? 'flex' : 'none'; if (o.okText) { ok.style.display = 'block'; ok.innerText = o.okText; ok.className = o.isDanger ? 'nw-modal-btn-danger' : 'nw-modal-btn-ok'; ok.onclick = function() { if (o.onOk) o.onOk(); else m.style.display = 'none'; }; } else ok.style.display = 'none'; if (o.cancelText) { can.style.display = 'block'; can.innerText = o.cancelText; can.onclick = function() { if (o.onCancel) o.onCancel(); else m.style.display = 'none'; }; } else can.style.display = 'none'; m.style.display = 'flex'; }
         function returnToStep1() { container.querySelector('#nw-global-modal').style.display = 'none'; step3.style.display = 'none'; step2.style.display = 'none'; step1.style.display = 'block'; }
-        container.querySelectorAll('input[name=\"router_type\"]').forEach(function(r) { r.addEventListener('change', function() { container.querySelector('#router-static-fields').style.display = (this.value === 'static') ? 'block' : 'none'; }); });
+        
+        container.querySelectorAll('input[name="router_type"]').forEach(function(r) { r.addEventListener('change', function() { container.querySelector('#router-static-fields').style.display = (this.value === 'static') ? 'block' : 'none'; }); });
         var bypassToggle = container.querySelector('#lan-bypass-toggle');
         bypassToggle.addEventListener('change', function() { container.querySelector('#lan-bypass-warning').style.display = this.checked ? 'block' : 'none'; container.querySelector('#lan-main-warning').style.display = this.checked ? 'none' : 'block'; });
         container.querySelectorAll('.nw-card').forEach(function (card) { card.addEventListener('click', function () { selectedMode = card.getAttribute('data-mode'); step1.style.display = 'none'; container.querySelector('#fields-router').style.display = (selectedMode === 'router') ? 'block' : 'none'; container.querySelector('#fields-pppoe').style.display = (selectedMode === 'pppoe') ? 'block' : 'none'; container.querySelector('#fields-lan').style.display = (selectedMode === 'lan') ? 'block' : 'none'; step2.style.display = 'block'; }); });
@@ -390,41 +388,14 @@ return view.extend({
         container.querySelector('#btn-back-2').addEventListener('click', function () { step3.style.display = 'none'; step2.style.display = 'block'; });
         container.querySelector('#top-back-2').addEventListener('click', function () { step3.style.display = 'none'; step2.style.display = 'block'; });
 
-        container.querySelector('#btn-next-2').addEventListener('click', function () {
-            try {
-                var rType = container.querySelector('input[name=\"router_type\"]:checked').value, targetIp = '', targetGw = '', isBypass = false;
-                if (selectedMode === 'lan') { targetIp = container.querySelector('#lan-ip').value.trim(); targetGw = container.querySelector('#lan-gw').value.trim(); isBypass = bypassToggle.checked;
-                    if (!targetIp) { openModal({title: T['M_INC_TIT'], msg: T['M_INC_IP'], okText:T['BTN_EDIT']}); return; }
-                    if (!isValidIP(targetIp)) { openModal({title:T['M_FMT_TIT'], msg:T['M_FMT_IP'], okText:T['BTN_EDIT']}); return; }
-                    if (isBypass && (!targetGw || !isValidIP(targetGw))) { openModal({title: (targetGw?T['M_FMT_TIT']:T['M_LOGIC_TIT']), msg: (targetGw?T['M_FMT_GW']:T['M_LOGIC_BYP']), okText:T['BTN_EDIT']}); return; }
-                } else if (selectedMode === 'router' && rType === 'static') { targetIp = container.querySelector('#router-ip').value.trim(); targetGw = container.querySelector('#router-gw').value.trim();
-                    if (!targetIp || !targetGw) { openModal({title:T['M_INC_TIT'], msg:T['M_INC_WAN'], okText:T['BTN_EDIT']}); return; }
-                    if (!isValidIP(targetIp) || !isValidIP(targetGw)) { openModal({title:T['M_FMT_TIT'], msg:(!isValidIP(targetIp)?T['M_FMT_WAN']:T['M_FMT_GW']), okText:T['BTN_EDIT']}); return; }
-                } else if (selectedMode === 'pppoe') { if (!container.querySelector('#pppoe-user').value.trim() || !container.querySelector('#pppoe-pass').value.trim()) { openModal({title: T['M_INC_TIT'], msg: T['M_INC_PPPOE'], okText: T['BTN_EDIT']}); return; } }
-                uci.load('network').then(function() {
-                    var currentLanIp = safeUciGet('network', 'lan', 'ipaddr', window.location.hostname).split('/')[0], currentLanGw = safeUciGet('network', 'lan', 'gateway', ''), currentWanProto = safeUciGet('network', 'wan', 'proto', '').toLowerCase();
-                    var currentWanIp = (currentWanProto === 'static') ? safeUciGet('network', 'wan', 'ipaddr', '').split('/')[0] : '', currentWanGw = safeUciGet('network', 'wan', 'gateway', ''), currentBypass = (safeUciGet('dhcp', 'lan', 'ignore', '') === '1' ? '1' : '0'), newBypass = bypassToggle.checked ? '1' : '0';
-                    if ((selectedMode === 'lan' && targetIp === currentLanIp && targetGw === currentLanGw && newBypass === currentBypass) || (selectedMode === 'router' && rType === 'static' && targetIp === currentWanIp && targetGw === currentWanGw) || (selectedMode === 'router' && rType === 'dhcp' && currentWanProto === 'dhcp')) { openModal({title: T['M_NO_MOD_TIT'], msg: T['M_NO_MOD_MSG'], okText: T['M_EXIT'], onOk: returnToStep1 }); return; }
-                    if (selectedMode === 'router' && rType === 'static') { if (targetIp === currentLanIp || isSameSubnet(targetIp, currentLanIp)) { openModal({title:T['M_CFLT_TIT'], msg: (targetIp === currentLanIp ? T['M_CFLT_IP'].replace('{ip}', currentLanIp) : T['M_CFLT_SUB1'].replace('{ip}', currentLanIp) + '<br>' + T['M_CFLT_SUB2']), okText:T['BTN_EDIT']}); return; } if (targetIp === targetGw || !isSameSubnet(targetIp, targetGw)) { openModal({title:(targetIp===targetGw?T['M_LOGIC_TIT']:T['M_SUB_ERR_TIT']), msg:(targetIp===targetGw?T['M_SAME_GW'] : T['M_SUB_ERR_WAN1'] + '<br>' + T['M_SUB_ERR_WAN2'].replace('{gw}', targetGw).replace('{ip}', targetGw.substring(0, targetGw.lastIndexOf('.')))), okText:T['BTN_EDIT']}); return; } }
-                    if (selectedMode === 'lan') { if (isBypass && (targetIp === targetGw || !isSameSubnet(targetIp, targetGw))) { openModal({title:(targetIp===targetGw?T['M_LOGIC_TIT']:T['M_SUB_ERR_TIT']), msg:(targetIp===targetGw?T['M_SAME_BYP']:T['M_SUB_ERR_BYP']), okText:T['BTN_EDIT']}); return; } if (currentWanIp && (targetIp === currentWanIp || isSameSubnet(targetIp, currentWanIp))) { openModal({title:T['M_CFLT_TIT'], msg:(targetIp===currentWanIp ? T['M_CFLT_LAN_IP'].replace('{ip}', currentWanIp) : T['M_CFLT_LAN_SUB'].replace('{ip}', currentWanIp) + '<br>' + T['M_CFLT_SUB2']), okText:T['BTN_EDIT']}); return; } }
-                    var b = function(t, p) { var h = \"<div style='text-align:center; font-size:18px; margin-bottom:15px;'>\" + t + \"</div><div style='background:rgba(0,0,0,0.15); border-radius:8px; padding:10px 15px; font-size:14.5px;'>\"; for (var i=0; i < p.length; i++) h += \"<div style='display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px solid rgba(255,255,255,0.1);'><span style='opacity:0.8;'>\" + p[i][0] + \"</span><span style='font-family:monospace;'>\" + p[i][1] + \"</span></div>\"; return h + \"</div>\"; };
-                    if (selectedMode === 'lan') confirmText.innerHTML = b(isBypass ? T['MODE_LAN_TITLE']+\" - \"+T['STAT_BYPASS'] : T['MODE_LAN_TITLE']+\" - \"+T['STAT_LAN'], [[T['TXT_DEV_IP'].replace(':',''), targetIp], [T['LBL_GW'], targetGw || T['TXT_NOT_SET']], [\"DHCP\", isBypass ? T['TXT_OFF'] : T['TXT_ON']]]);
-                    else if (selectedMode === 'router') confirmText.innerHTML = (rType === 'static' ? b(T['STAT_SEC_STATIC'], [[T['TXT_WAN_IP'].replace(':',''), targetIp], [T['TXT_UP_GW'].replace(':',''), targetGw]]) : b(T['STAT_SEC_DHCP'], [[T['LBL_CONN_TYPE'], T['OPT_DHCP']], [T['M_IP_GW'], T['M_AUTO_UP']]]));
-                    else confirmText.innerHTML = b(T['MODE_PPPOE_TITLE'], [[T['M_ACCT'], container.querySelector('#pppoe-user').value], [T['M_PWD'], T['M_HIDDEN']]]);
-                    if (selectedMode === 'lan' && !isBypass && targetGw !== '') { openModal({ title: T['M_WARN_TIT'], msg: T['M_WARN_MSG'], cancelText: T['BTN_EDIT'], okText: T['M_WARN_BTN'], isDanger: true, onOk: function() { container.querySelector('#nw-global-modal').style.display = 'none'; step2.style.display = 'none'; step3.style.display = 'block'; } }); return; }
-                    step2.style.display = 'none'; step3.style.display = 'block';
-                });
-            } catch (e) { openModal({title:T['ERR_RD_SYS'], msg:T['ERR_CRASH'], okText:T['M_CLOSE']}); }
-        });
-
         container.querySelector('#btn-apply').addEventListener('click', function () {
-            var mode = selectedMode, a1 = '', a2 = '', a3 = '', a4 = '', a5 = '1', rType = container.querySelector('input[name=\"router_type\"]:checked').value;
+            var mode = selectedMode, a1 = '', a2 = '', a3 = '', a4 = '', a5 = '1', rType = container.querySelector('input[name="router_type"]:checked').value;
             if (selectedMode === 'lan') { a1 = container.querySelector('#lan-ip').value.trim(); a2 = container.querySelector('#lan-gw').value.trim(); a3 = calculateNetmask(a1); a4 = bypassToggle.checked ? '1' : '0'; a5 = container.querySelector('#lan-force-toggle').checked ? '0' : '1';
             } else if (selectedMode === 'router') { mode = (rType === 'dhcp') ? 'wan_dhcp' : 'wan_static'; if(rType === 'static') { a1 = container.querySelector('#router-ip').value.trim(); a2 = container.querySelector('#router-gw').value.trim(); a3 = calculateNetmask(a1); }
             } else if (selectedMode === 'pppoe') { a1 = container.querySelector('#pppoe-user').value; a2 = container.querySelector('#pppoe-pass').value; }
-            var dynamicTitle = \"\", actionDetail = \"\";
-            if (selectedMode === 'lan') { dynamicTitle = (a4 === '1') ? T['ACT_BYPASS'] : T['ACT_LAN']; actionDetail = '<b style=\"color:#3b82f6;\">' + a1 + '</b>'; } else if (selectedMode === 'router') { dynamicTitle = (rType === 'dhcp') ? T['ACT_WAN_DHCP'] : T['ACT_WAN_STATIC']; actionDetail = (rType === 'dhcp') ? 'Auto IP' : '<b style=\"color:#10b981;\">' + a1 + '</b>'; } else if (selectedMode === 'pppoe') { dynamicTitle = T['ACT_PPPOE']; actionDetail = '<b style=\"color:#9333ea;\">' + a1 + '</b>'; }
-            openModal({ title: dynamicTitle, msg: '<div style=\"font-size: 16px; margin-bottom: 10px;\">' + T['LBL_TARGET'] + ' ' + actionDetail + '</div><div style=\"color: #64748b; font-size: 16px;\">' + T['MSG_WRITING'] + '</div>', spin: true });
+            var dynamicTitle = "", actionDetail = "";
+            if (selectedMode === 'lan') { dynamicTitle = (a4 === '1') ? T['ACT_BYPASS'] : T['ACT_LAN']; actionDetail = '<b style="color:#3b82f6;">' + a1 + '</b>'; } else if (selectedMode === 'router') { dynamicTitle = (rType === 'dhcp') ? T['ACT_WAN_DHCP'] : T['ACT_WAN_STATIC']; actionDetail = (rType === 'dhcp') ? 'Auto IP' : '<b style="color:#10b981;">' + a1 + '</b>'; } else if (selectedMode === 'pppoe') { dynamicTitle = T['ACT_PPPOE']; actionDetail = '<b style="color:#9333ea;">' + a1 + '</b>'; }
+            openModal({ title: dynamicTitle, msg: '<div style="font-size: 16px; margin-bottom: 10px;">' + T['LBL_TARGET'] + ' ' + actionDetail + '</div><div style="color: #64748b; font-size: 16px;">' + T['MSG_WRITING'] + '</div>', spin: true });
             var start = Date.now(), done = false;
             var succ = function() {
                 var h = window.location.hostname, sec = 0;
@@ -434,18 +405,18 @@ return view.extend({
                         var countdownTimer = setInterval(function() {
                             sec += 2;
                             if (sec <= bombTime) {
-                                document.getElementById('nw-global-msg').innerHTML = '<div style=\"font-size: 16px; margin-bottom: 12px;\">' + T['LBL_TARGET'] + ' <b style=\"color:#3b82f6; font-size: 18px;\">' + a1 + '</b></div><div id=\"nw-status-text\" style=\"color: #10b981; font-size: 16px; font-weight: bold; margin-bottom: 10px;\">' + T['MSG_WRITING'] + '</div><div style=\"color: #64748b; font-size: 14px; font-weight: bold;\">' + T['MSG_TIMER'].replace('{sec}', sec).replace('{total}', bombTime) + '</div>';
+                                document.getElementById('nw-global-msg').innerHTML = '<div style="font-size: 16px; margin-bottom: 12px;">' + T['LBL_TARGET'] + ' <b style="color:#3b82f6; font-size: 18px;">' + a1 + '</b></div><div id="nw-status-text" style="color: #10b981; font-size: 16px; font-weight: bold; margin-bottom: 10px;">' + T['MSG_WRITING'] + '</div><div style="color: #64748b; font-size: 14px; font-weight: bold;">' + T['MSG_TIMER'].replace('{sec}', sec).replace('{total}', bombTime) + '</div>';
                                 if (sec >= 8 && !isProbing) { isProbing = true; fetch('http://' + a1 + '/luci-static/resources/view/netwiz.js?v=' + Date.now(), { mode: 'no-cors', cache: 'no-store' }).then(function() { clearInterval(countdownTimer); callNetDefuse().then(function() { window.location.href = 'http://' + a1 + '/cgi-bin/luci/'; }).catch(function() { window.location.href = 'http://' + a1 + '/cgi-bin/luci/'; }); }).catch(function() { setTimeout(function() { isProbing = false; }, 500); }); }
                             } else {
                                 clearInterval(countdownTimer); var rollbackSec = 0;
-                                var checkOldIpTimer = setInterval(function() { rollbackSec += 2; document.getElementById('nw-global-msg').innerHTML = '<div style=\"color:#10b981; font-weight:bold; font-size:15px; margin-top:20px; margin-bottom:10px;\">' + T['MSG_WAIT_OLD'].replace('{sec}', rollbackSec) + '</div><div style=\"color:#64748b; font-size:13px;\">' + T['MSG_ABANDONING'] + '</div>'; fetch('http://' + h + '/cgi-bin/luci/?v=' + Date.now(), { mode: 'no-cors', cache: 'no-store' }).then(function() { clearInterval(checkOldIpTimer); window.location.href = 'http://' + h + '/cgi-bin/luci/admin/netwiz'; }).catch(function() {}); }, 2000);
+                                var checkOldIpTimer = setInterval(function() { rollbackSec += 2; document.getElementById('nw-global-msg').innerHTML = '<div style="color:#10b981; font-weight:bold; font-size:15px; margin-top:20px; margin-bottom:10px;">' + T['MSG_WAIT_OLD'].replace('{sec}', rollbackSec) + '</div><div style="color:#64748b; font-size:13px;">' + T['MSG_ABANDONING'] + '</div>'; fetch('http://' + h + '/cgi-bin/luci/?v=' + Date.now(), { mode: 'no-cors', cache: 'no-store' }).then(function() { clearInterval(checkOldIpTimer); window.location.href = 'http://' + h + '/cgi-bin/luci/admin/netwiz'; }).catch(function() {}); }, 2000);
                             }
                         }, 2000);
                     } else {
-                        var probeNewTimer = setInterval(function() { document.getElementById('nw-global-msg').innerHTML = '<div style=\"font-size: 16px; margin-bottom: 12px;\">' + T['LBL_TARGET'] + ' <b style=\"color:#3b82f6; font-size: 18px;\">' + a1 + '</b></div><div style=\"color: #ef4444; font-size: 16px; font-weight: bold; margin-bottom: 10px; margin-top:20px;\">' + T['MSG_SAFE_OFF'] + '</div><div style=\"color:#64748b; font-size:13px; line-height:1.6; margin-top:10px;\">' + T['MSG_MANUAL_VISIT'] + '<br><br><a href=\"http://' + a1 + '/cgi-bin/luci/\" style=\"color:#10b981; font-weight:bold; font-size:16px;\">http://' + a1 + '</a></div>'; fetch('http://' + a1 + '/luci-static/resources/view/netwiz.js?v=' + Date.now(), { mode: 'no-cors', cache: 'no-store' }).then(function() { clearInterval(probeNewTimer); window.location.href = 'http://' + a1 + '/cgi-bin/luci/'; }).catch(function() {}); }, 2000);
+                        var probeNewTimer = setInterval(function() { document.getElementById('nw-global-msg').innerHTML = '<div style="font-size: 16px; margin-bottom: 12px;">' + T['LBL_TARGET'] + ' <b style="color:#3b82f6; font-size: 18px;">' + a1 + '</b></div><div style="color: #ef4444; font-size: 16px; font-weight: bold; margin-bottom: 10px; margin-top:20px;">' + T['MSG_SAFE_OFF'] + '</div><div style="color:#64748b; font-size:13px; line-height:1.6; margin-top:10px;">' + T['MSG_MANUAL_VISIT'] + '<br><br><a href="http://' + a1 + '/cgi-bin/luci/" style="color:#10b981; font-weight:bold; font-size:16px;">http://' + a1 + '</a></div>'; fetch('http://' + a1 + '/luci-static/resources/view/netwiz.js?v=' + Date.now(), { mode: 'no-cors', cache: 'no-store' }).then(function() { clearInterval(probeNewTimer); window.location.href = 'http://' + a1 + '/cgi-bin/luci/'; }).catch(function() {}); }, 2000);
                     }
                 } else { 
-                    var checkSameTimer = setInterval(function() { sec += 2; document.getElementById('nw-global-msg').innerHTML = '<div style=\"font-size: 16px; margin-bottom: 10px;\">' + T['LBL_TARGET'] + ' ' + actionDetail + '</div><div style=\"color: #059669; font-size: 16px; font-weight: bold; margin-top: 15px;\">' + T['MSG_WAIT_NET'].replace('{sec}', sec) + '</div>'; fetch('http://' + h + '/cgi-bin/luci/?v=' + Date.now(), { mode: 'no-cors', cache: 'no-store' }).then(function() { clearInterval(checkSameTimer); window.location.reload(); }).catch(function() {}); }, 2000);
+                    var checkSameTimer = setInterval(function() { sec += 2; document.getElementById('nw-global-msg').innerHTML = '<div style="font-size: 16px; margin-bottom: 10px;">' + T['LBL_TARGET'] + ' ' + actionDetail + '</div><div style="color: #059669; font-size: 16px; font-weight: bold; margin-top: 15px;">' + T['MSG_WAIT_NET'].replace('{sec}', sec) + '</div>'; fetch('http://' + h + '/cgi-bin/luci/?v=' + Date.now(), { mode: 'no-cors', cache: 'no-store' }).then(function() { clearInterval(checkSameTimer); window.location.reload(); }).catch(function() {}); }, 2000);
                 }
             };
             callNetSetup(mode, a1, a2, a3, a4, a5).then(function() { done = true; succ(); }).catch(function(e) { done = true; var errMsg = e.message || ''; if (errMsg.indexOf('aborted') !== -1 || errMsg.indexOf('NetworkError') !== -1 || errMsg.indexOf('Failed to fetch') !== -1) { succ(); } else if (Date.now() - start < 1500) { openModal({ title: T['M_FAIL_TIT'], msg: T['M_FAIL_MSG'] + '<br><small>' + T['M_FAIL_CODE'].replace('{code}', errMsg) + '</small>', okText: T['M_CLOSE'], isDanger: true }); } else { succ(); } });
