@@ -369,8 +369,6 @@ return view.extend({
             '          </div>',
             '          <div class="nw-value"><label class="nw-value-title">{{LBL_SSID}}</label><div class="nw-value-field"><input type="text" id="wifi-smart-ssid" placeholder="My_WiFi"></div></div>',
             '          <div class="nw-value"><label class="nw-value-title">{{LBL_WIFI_PASS}}</label><div class="nw-value-field"><input type="text" id="wifi-smart-key" placeholder="min 8 chars"></div></div>',
-            
-            // 🌟 加密方式已移入高级面板
             '          <div class="nw-adv-btn">▼ {{LBL_ADVANCED}}</div>',
             '          <div class="nw-adv-panel" style="display:none;">',
             '             <div style="display: flex; align-items: center; justify-content: space-between; padding: 5px 0 15px 0; border-bottom: 1px dashed #cbd5e1; margin-bottom: 15px;">',
@@ -383,7 +381,7 @@ return view.extend({
             '          </div>',
             '        </div>',
 
-            // --- 🌟 分开独立面板 (包含全局开关、高级设置、物理模式) ---
+            // --- 分开独立面板 (包含全局开关、高级设置、物理模式) ---
             '        <div id="wifi-split-ui" style="display: block;">',
             '           <div style="display: flex; align-items: center; justify-content: space-between; padding: 0 0 15px 0; margin-bottom: 15px; border-bottom: 1px dashed #e2e8f0;">',
             '              <div style="display: flex; align-items: center; gap: 10px;">',
@@ -411,8 +409,6 @@ return view.extend({
             '                 </div>',
             '                 <label class="nw-switch" style="flex-shrink: 0;"><input type="checkbox" id="legacy-b-toggle"><span class="nw-slider"></span></label>',
             '              </div>',
-            
-            // 🌟 加密方式已移入高级面板
             '              <div class="nw-adv-btn">▼ {{LBL_ADVANCED}}</div>',
             '              <div class="nw-adv-panel" style="display:none;">',
             '                 <div style="display: flex; align-items: center; justify-content: space-between; padding: 5px 0 15px 0; border-bottom: 1px dashed #cbd5e1; margin-bottom: 15px;">',
