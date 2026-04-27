@@ -511,10 +511,10 @@ return view.extend({
                             // --- 芯片字典控制台彩色列印 ---
                             var getWifiGen = function(hw, ht) {
                                 hw = (hw || '').toLowerCase(); ht = (ht || '').toLowerCase();
-                                if (hw.indexOf('be') !== -1 || ht.indexOf('eht') !== -1) return 'Wi-Fi 7 (802.11be 極速)';
+                                if (hw.indexOf('be') !== -1 || ht.indexOf('eht') !== -1) return 'Wi-Fi 7 (802.11be 极速)';
                                 if (hw.indexOf('ax') !== -1 || ht.indexOf('he') !== -1) return 'Wi-Fi 6 (802.11ax 高速)';
-                                if (hw.indexOf('ac') !== -1 || ht.indexOf('vht') !== -1) return 'Wi-Fi 5 (802.11ac 標準)';
-                                if (ht.indexOf('ht') !== -1 || hw.indexOf('n') !== -1) return 'Wi-Fi 4 (802.11n 基礎)';
+                                if (hw.indexOf('ac') !== -1 || ht.indexOf('vht') !== -1) return 'Wi-Fi 5 (802.11ac 标准)';
+                                if (ht.indexOf('ht') !== -1 || hw.indexOf('n') !== -1) return 'Wi-Fi 4 (802.11n 基础)';
                                 if (hw.indexOf('g') !== -1) return 'Wi-Fi 3 (802.11g 老旧)';
                                 if (hw.indexOf('a') !== -1) return 'Wi-Fi 2 (802.11a 古董)';
                                 if (hw.indexOf('b') !== -1) return 'Wi-Fi 1 (802.11b 远古)';
