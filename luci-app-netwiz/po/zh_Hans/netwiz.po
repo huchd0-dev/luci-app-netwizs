@@ -471,3 +471,21 @@ msgstr "正在应用 Wi-Fi 设置"
 
 msgid "Smart Connect cannot be enabled because 802.11b (Legacy Mode) is active. Disable it in 2.4G settings first."
 msgstr "因已开启 802.11b 兼容模式，无法启用多频合一。请先在 2.4G 设置中将其关闭。"
+
+msgid "Advanced Settings"
+msgstr "高级设置"
+
+msgid "Hide Advanced"
+msgstr "收起高级设置"
+
+msgid "Hide Wi-Fi Name (SSID)"
+msgstr "隐藏 Wi-Fi 名称"
+
+msgid "Channel"
+msgstr "信道"
+
+msgid "Channel Width"
+msgstr "通道宽度 (频宽)"
+
+msgid "Auto"
+msgstr "自动"
