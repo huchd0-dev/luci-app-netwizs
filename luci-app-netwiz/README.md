@@ -136,8 +136,9 @@ Filter OpenWrt global system logs for Netwiz emergency alerts (e.g., Power-loss 
 ```bash
 logread | grep Netwiz
 ```
-
+<img width="680" alt="Image" src="https://github.com/user-attachments/assets/b2fca517-cbd2-4aa0-b557-bac5fd557dba" />
 <img width="680" alt="Image" src="https://github.com/user-attachments/assets/cce37944-d90a-4653-923c-d957812d8f37" />
+<img width="680" alt="Image" src="https://github.com/user-attachments/assets/8cae623d-766f-49a8-8c6c-ab78738d6b88" />
 <img width="680" alt="Image" src="https://github.com/user-attachments/assets/f0bd7bf8-16b7-4955-9a83-55673a7bf66e" />
 <img width="680" alt="Image" src="https://github.com/user-attachments/assets/ea664013-9f76-49e3-b10f-8307dbb6fc24" />
 <img width="680" alt="Image" src="https://github.com/user-attachments/assets/5c0370fc-efd9-4e51-be3c-ed35233786d6" />
