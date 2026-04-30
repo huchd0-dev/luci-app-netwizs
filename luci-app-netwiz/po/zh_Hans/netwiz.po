@@ -523,6 +523,9 @@ msgstr "无密码"
 msgid "Enable Wireless Relay (WISP)"
 msgstr "启用无线中继 (WISP)"
 
+msgid "Receive upstream Wi-Fi and broadcast your own network."
+msgstr "接收上级 Wi-Fi 信号，并广播您自己的专属网络。"
+
 msgid "WISP Enabled"
 msgstr "已开启无线中继"
 
