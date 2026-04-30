@@ -636,8 +636,18 @@ return view.extend({
                     
                     var bypassToggle = container.querySelector('#lan-bypass-toggle');
                     if (bypassToggle) { bypassToggle.checked = isBypass; container.querySelector('#lan-bypass-warning').style.display = isBypass ? 'block' : 'none'; container.querySelector('#lan-main-warning').style.display = isBypass ? 'none' : 'block'; }
-                    
-                    var ipv6Mode = safeUciGet('dhcp', 'lan', 'dhcpv6', '');
+
+                    // --- 同步 WISP 开关状态 ---
+                    var wispToggleEl = container.querySelector('#wisp-toggle');
+                    if (wispToggleEl) {
+                        var isWispOn = uci.sections('wireless', 'wifi-iface').find(function(i) { return i.network === 'wwan' && i.mode === 'sta'; });
+                        wispToggleEl.checked = !!isWispOn;
+                        var wispUi = container.querySelector('#wisp-ui-panel');
+                        if (wispUi) wispUi.style.display = wispToggleEl.checked ? 'block' : 'none';
+                    }
+                    // ---------------------------------------
+
+                var ipv6Mode = safeUciGet('dhcp', 'lan', 'dhcpv6', '');
                     var ipv6Toggle = container.querySelector('#lan-ipv6-toggle');
                     if (ipv6Toggle) ipv6Toggle.checked = (ipv6Mode === 'server' || ipv6Mode === 'relay');
 
@@ -921,40 +931,38 @@ return view.extend({
                     
                     var wDevsList = uci.sections('wireless', 'wifi-device') || [];
                     var wIfacesList = uci.sections('wireless', 'wifi-iface') || [];
-                    var activeIfaces = wIfacesList.filter(function(i) { return i.disabled !== '1' && i.mode === 'ap' && i.ssid; });
+                    var activeIfaces = wIfacesList.filter(function(i) { return i.disabled !== '1' && (i.mode === 'ap' || i.mode === 'sta') && i.ssid; });
                     var wifiLines = [];
                     
                     if (activeIfaces.length === 0) {
                         wifiLines.push("<div><span style='opacity:0.9;'>" + T['TXT_WIFI_STATUS'] + ": </span><b style='color:#ef4444;'>" + T['TXT_OFF'] + "</b></div>");
                     } else {
-                        // 利用算法聚合 SSID 以自动判断是否为多频合一
-                        var sMap = {};
                         activeIfaces.forEach(function(i) {
-                            var s = i.ssid, k = i.key || T['TXT_NO_PASS'];
-                            if(!sMap[s]) sMap[s] = { key: k, count: 0, devs: [] };
-                            sMap[s].count++;
-                            sMap[s].devs.push(i.device);
-                        });
-                        
-                        for (var sName in sMap) {
-                            var obj = sMap[sName];
-                            var tLbl = "Wi-Fi";
-                            // 计数大于 1 说明两个频段叫同一个名字 = 多频合一
-                            if (obj.count > 1) {
-                                tLbl = "<b style='color:#fff;'>" + T['TXT_SMART_ACCT'] + "</b>";
-                            } else if (obj.devs[0]) {
-                                var dObj = wDevsList.find(function(x) { return x['.name'] === obj.devs[0]; });
-                                var hw = dObj ? (dObj.hwmode||'').toLowerCase() : '';
-                                var bd = dObj ? (dObj.band||'').toLowerCase() : '';
-                                var path = dObj ? (dObj.path||'').toLowerCase() : '';
-                                // 判断到底是 5G 还是 2.4G
-                                if (hw.indexOf('a') !== -1 || bd === '5g' || path.indexOf('pcie1') !== -1 || path.indexOf('pcie2') !== -1) tLbl = "<b style='color:#fff;'>" + T['TXT_5G_ACCT'] + "</b>";
-                                else tLbl = "<b style='color:#fff;'>" + T['TXT_2G_ACCT'] + "</b>";
-                            }
-                            var kTxt = (obj.key === T['TXT_NO_PASS']) ? "<span style='color:#ef4444;'>" + T['TXT_NO_PASS'] + "</span>" : obj.key;
+                            var sName = i.ssid;
+                            var kTxt = i.key || "<span style='color:#ef4444;'>" + T['TXT_NO_PASS'] + "</span>";
                             
-                            wifiLines.push("<div style='display:flex; align-items:center; justify-content:center; gap:8px;'><span><span style='font-size:15.5px; opacity:0.9; font-weight: 600;'>" + tLbl + ":</span> <span class='nw-hl' style='font-size:16.5px; letter-spacing:0.5px; margin-left:4px;'>" + sName + "</span></span><span style='color:#ffffff; font-size:16.5px; font-weight: 600; margin-left:4px; '>(" + T['M_PWD'] + ": " + kTxt + ")</span></div>");
-                        }
+                            // 暴力判定：只要是 sta 模式，就是中继！
+                            if (i.mode === 'sta') {
+                                // 中继模式：绿字标题，绝对不显示密码括号！
+                                var tLbl = "<b style='color:#10b981;'>已开启无线中继</b>";
+                                wifiLines.push("<div style='display:flex; align-items:center; justify-content:center; gap:8px;'><span><span style='font-size:15.5px; opacity:0.9; font-weight: 600;'>" + tLbl + ":</span> <span class='nw-hl' style='font-size:16.5px; letter-spacing:0.5px; margin-left:4px;'>" + sName + "</span></span></div>");
+                            } else {
+                                // 正常 AP 模式：判断是 2.4G 还是 5G，并显示密码
+                                var tLbl = "Wi-Fi";
+                                var dObj = wDevsList.find(function(x) { return x['.name'] === i.device; });
+                                if (dObj) {
+                                    var hw = (dObj.hwmode||'').toLowerCase();
+                                    var bd = (dObj.band||'').toLowerCase();
+                                    var path = (dObj.path||'').toLowerCase();
+                                    if (hw.indexOf('a') !== -1 || bd === '5g' || path.indexOf('pcie1') !== -1 || path.indexOf('pcie2') !== -1) {
+                                        tLbl = "<b style='color:#fff;'>" + T['TXT_5G_ACCT'] + "</b>";
+                                    } else {
+                                        tLbl = "<b style='color:#fff;'>" + T['TXT_2G_ACCT'] + "</b>";
+                                    }
+                                }
+                                wifiLines.push("<div style='display:flex; align-items:center; justify-content:center; gap:8px;'><span><span style='font-size:15.5px; opacity:0.9; font-weight: 600;'>" + tLbl + ":</span> <span class='nw-hl' style='font-size:16.5px; letter-spacing:0.5px; margin-left:4px;'>" + sName + "</span></span><span style='color:#ffffff; font-size:16.5px; font-weight: 600; margin-left:4px; '>(" + T['M_PWD'] + ": " + kTxt + ")</span></div>");
+                            }
+                        });
                     }
                     
                     var ipv6Html = "<div style='font-size:15.5px; font-weight:bold; color:#ffffff; font-family:monospace; letter-spacing:0.5px; display:flex; flex-wrap:wrap; justify-content:center; align-items:center; line-height: 1.8; margin-top: 6px;'><span style='font-weight: 900; margin-right: 8px;'>IPv6 (DHCPv6): </span>" + ipv6Label + "</div>";
