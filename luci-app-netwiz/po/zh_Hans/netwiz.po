@@ -534,3 +534,13 @@ msgstr "选择上级网络"
 
 msgid "Password for upstream:"
 msgstr "上级 Wi-Fi 密码："
+
+msgid "⏳ Scanning..."
+msgstr "⏳ 正在扫描..."
+
+msgid "No networks found."
+msgstr "未找到任何网络。"
+
+msgid "Scan failed. Driver might be busy."
+msgstr "扫描失败。无线驱动可能繁忙，请重试。"
+
