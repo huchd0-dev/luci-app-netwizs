@@ -320,8 +320,6 @@ case "$1" in
                         fi
                     fi
                     
-                    fi
-                    
                     local wisp_en=$(echo "$payload" | jsonfilter -e "@.wisp.enabled" || echo "0")
                     if [ "$wisp_en" = "1" ]; then
                         local wisp_ssid=$(echo "$payload" | jsonfilter -e "@.wisp.ssid" || echo "")
