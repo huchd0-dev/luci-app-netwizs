@@ -505,6 +505,8 @@ return view.extend({
             '                 <div class="nw-value"><label class="nw-value-title">{{WISP_PWD_PROMPT}}</label><div class="nw-value-field"><input type="password" id="wisp-target-key" placeholder="Upstream Wi-Fi Password"></div></div>',
             '                 <input type="hidden" id="wisp-target-enc" value="psk2">',
             '                 <input type="hidden" id="wisp-target-device" value="radio0">',
+            '                 <input type="hidden" id="wisp-target-bssid" value=""></input>',
+            
             '              </div>',
             '           </div>',
             '        </div>',
@@ -1239,6 +1241,7 @@ return view.extend({
                                     
                                     // 3. 填入绑定的物理网卡
                                     container.querySelector('#wisp-target-device').value = scanDevice; 
+                                    container.querySelector('#wisp-target-bssid').value = net.bssid || '';
                                     
                                     // 4. 显示输入密码区域并关闭弹窗
                                     container.querySelector('#wisp-selected-info').style.display = 'block';
@@ -1562,7 +1565,8 @@ return view.extend({
                             ssid: container.querySelector('#wisp-target-ssid').value,
                             key: container.querySelector('#wisp-target-key').value,
                             encryption: container.querySelector('#wisp-target-enc').value,
-                            device: container.querySelector('#wisp-target-device').value
+                            device: container.querySelector('#wisp-target-device').value,
+                            bssid: container.querySelector('#wisp-target-bssid').value
                         };
                     }
                     // 結束
