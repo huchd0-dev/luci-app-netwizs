@@ -1218,14 +1218,43 @@ return view.extend({
                             
                             li.onmouseover = function() { this.style.background = '#f8fafc'; };
                             li.onmouseout = function() { this.style.background = 'transparent'; };
+                            
                             li.onclick = function() {
-                                container.querySelector('#wisp-target-ssid').value = net.ssid;
-                                container.querySelector('#wisp-target-enc').value = net.encryption ? (net.encryption.description.toLowerCase().indexOf('wpa3') !== -1 || net.encryption.description.toLowerCase().indexOf('sae') !== -1 ? 'sae-mixed' : 'psk2') : 'none';
-                                container.querySelector('#wisp-target-device').value = scanDevice; 
-                                container.querySelector('#wisp-selected-info').style.display = 'block';
-                                container.querySelector('#wisp-target-key').focus();
-                                wispModal.style.display = 'none';
+                                try {
+                                    // 1. 填入 SSID
+                                    container.querySelector('#wisp-target-ssid').value = net.ssid || '';
+                                    
+                                    // 2. 极其安全的加密类型解析
+                                    var encVal = 'none';
+                                    if (net.encryption) {
+                                        var desc = typeof net.encryption === 'string' ? net.encryption : (net.encryption.description || '');
+                                        desc = desc.toLowerCase();
+                                        if (desc.indexOf('wpa3') !== -1 || desc.indexOf('sae') !== -1) {
+                                            encVal = 'sae-mixed';
+                                        } else if (desc.indexOf('wpa') !== -1 || desc.indexOf('psk') !== -1 || desc.indexOf('mixed') !== -1) {
+                                            encVal = 'psk2';
+                                        }
+                                    }
+                                    container.querySelector('#wisp-target-enc').value = encVal;
+                                    
+                                    // 3. 填入绑定的物理网卡
+                                    container.querySelector('#wisp-target-device').value = scanDevice; 
+                                    
+                                    // 4. 显示输入密码区域并关闭弹窗
+                                    container.querySelector('#wisp-selected-info').style.display = 'block';
+                                    wispModal.style.display = 'none';
+                                    
+                                    // 5. 延时对焦，防止在部分浏览器中引发卡顿
+                                    setTimeout(function() {
+                                        var pwdInput = container.querySelector('#wisp-target-key');
+                                        if (pwdInput && encVal !== 'none') pwdInput.focus();
+                                    }, 100);
+                                    
+                                } catch(err) {
+                                    console.error("选取 Wi-Fi 时发生错误:", err);
+                                }
                             };
+                            
                             ul.appendChild(li);
                         });
                     }
@@ -1363,7 +1392,11 @@ return view.extend({
                         if (selectedMode === 'router' && rType === 'static' && targetIp === currentWanIp && targetGw === currentWanGw) isNoMod = true;
                         if (selectedMode === 'router' && rType === 'dhcp' && currentWanProto === 'dhcp') isNoMod = true;
                         if (selectedMode === 'pppoe' && container.querySelector('#pppoe-user').value === safeUciGet('network', 'wan', 'username', '') && container.querySelector('#pppoe-pass').value === safeUciGet('network', 'wan', 'password', '')) isNoMod = true;
-                        if (selectedMode === 'wifi' && window._origWifiState && currentWifiState === window._origWifiState) isNoMod = true;
+                        // 如果开启了 WISP 中继，跳过拦截！
+                        if (selectedMode === 'wifi' && window._origWifiState && currentWifiState === window._origWifiState) {
+                            var wTog = container.querySelector('#wisp-toggle');
+                            if (!wTog || !wTog.checked) isNoMod = true; 
+                        }
 
                         if (isNoMod) { openModal({title: T['M_NO_MOD_TIT'], msg: T['M_NO_MOD_MSG'], okText: T['M_EXIT'], onOk: returnToStep1 }); return; }
                         
@@ -1422,6 +1455,15 @@ return view.extend({
                                     }
                                 }
                             }
+                            
+                            // 中继 (WISP) 的确认信息展示
+                            var wTogConfirm = container.querySelector('#wisp-toggle');
+                            if (wTogConfirm && wTogConfirm.checked) {
+                                confirmList.push(['<b style="color:#10b981; font-size:15px;">🌐 ' + T['LBL_WISP_EN'] + '</b>', '<b style="color:#10b981;">' + T['TXT_ON'] + '</b>']);
+                                confirmList.push(['<span style="padding-left:12px; color:#ffffff; font-weight:500; opacity:0.95;">└ Target SSID</span>', '<span style="font-weight:bold; color:#facc15;">' + container.querySelector('#wisp-target-ssid').value + '</span>']);
+                            }
+                            // 结束
+                            
                             confirmText.innerHTML = b(T['MODE_WIFI_TITLE'], confirmList);
                         } else {
                             confirmText.innerHTML = b(T['MODE_PPPOE_TITLE'], [[T['M_ACCT'], container.querySelector('#pppoe-user').value], [T['M_PWD'], T['M_HIDDEN']]]);
