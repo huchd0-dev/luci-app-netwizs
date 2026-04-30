@@ -133,9 +133,10 @@ case "$1" in
                     (
                         exec >/tmp/netwiz_debug.log 2>&1 </dev/null
                         set -x  
+                        log "无线配置任务启动：正在解析前端 Payload..."
                         smart=$(echo "$payload" | jsonfilter -e '@.smart' || echo "false")
 
-                        log "开始执行无线网络配置重写"
+                        log "识别模式：Smart Connect = $smart"
                         
                         list_2g=""
                         list_5g=""
@@ -222,8 +223,12 @@ case "$1" in
                             if echo "$p_enc" | grep -q "sae"; then uci set wireless.$iface_name.ieee80211w='1'
                             else uci delete wireless.$iface_name.ieee80211w 2>/dev/null || true; fi
 
-                            # 802.11k/v/r 漫游配置
-                            if [ "$p_enc" != "none" ] && [ -n "$p_enc" ]; then
+                            # 提取前端发送的漫游开关状态
+                            local p_roaming=$(echo "$payload" | jsonfilter -e "@.${ui_prefix}.roaming" || echo "0")
+
+                            # 只有当开关开启且不是无密码模式时，才下发漫游配置
+                            if [ "$p_roaming" = "1" ] && [ "$p_enc" != "none" ] && [ -n "$p_enc" ]; then
+                                log "激活 $dev 的 802.11k/v/r 无缝漫游支持"
                                 uci set wireless.$iface_name.ieee80211r='1'
                                 uci set wireless.$iface_name.ieee80211k='1'
                                 uci set wireless.$iface_name.ieee80211v='1'
@@ -231,6 +236,7 @@ case "$1" in
                                 uci set wireless.$iface_name.ft_over_ds='0'
                                 uci set wireless.$iface_name.mobility_domain='e4d1'
                             else
+                                # 显式清理，防止残留
                                 uci delete wireless.$iface_name.ieee80211r 2>/dev/null || true
                                 uci delete wireless.$iface_name.ieee80211k 2>/dev/null || true
                                 uci delete wireless.$iface_name.ieee80211v 2>/dev/null || true
