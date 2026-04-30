@@ -21,11 +21,6 @@ case "$1" in
     call)
         case "$2" in
             check_wifi)
-                # 只要打开页面，前端解除首页劫持
-                if [ "$(uci -q get luci.main.index)" = "admin/netwiz" ]; then
-                    uci delete luci.main.index
-                    uci commit luci
-                fi
                 has_wifi="false"
                 if [ -f /etc/config/wireless ] && grep -q "wifi-device" /etc/config/wireless; then
                     has_wifi="true"
@@ -325,26 +320,35 @@ case "$1" in
                         fi
                     fi
                     
-                    uci commit wireless
-
-                    # 第一次开机完成配置后，将首页恢复为原版的系统概览
-                    if [ "$(uci -q get luci.main.index)" = "admin/netwiz" ]; then
-                        uci delete luci.main.index
-                        uci commit luci
                     fi
-
+                    
+                    local wisp_en=$(echo "$payload" | jsonfilter -e "@.wisp.enabled" || echo "0")
+                    if [ "$wisp_en" = "1" ]; then
+                        local wisp_ssid=$(echo "$payload" | jsonfilter -e "@.wisp.ssid" || echo "")
+                        local wisp_key=$(echo "$payload" | jsonfilter -e "@.wisp.key" || echo "")
+                        local wisp_enc=$(echo "$payload" | jsonfilter -e "@.wisp.encryption" || echo "psk2")
+                        local wisp_dev=$(echo "$payload" | jsonfilter -e "@.wisp.device" || echo "radio0")
+                        
+                        log " -> 启用无线中继 (WISP)，挂载至: $wisp_dev"
+                        uci set wireless.wisp_sta=wifi-iface
+                        uci set wireless.wisp_sta.device="$wisp_dev"
+                        uci set wireless.wisp_sta.network="wan"  # 挂载到 wan 口，获得外网与防火墙权限
+                        uci set wireless.wisp_sta.mode="sta"
+                        uci set wireless.wisp_sta.ssid="$wisp_ssid"
+                        uci set wireless.wisp_sta.key="$wisp_key"
+                        uci set wireless.wisp_sta.encryption="$wisp_enc"
+                    else
+                        # 清理可能存在的旧中继配置
+                        uci delete wireless.wisp_sta 2>/dev/null
+                    fi
+                    
+                    uci commit wireless
                     log "========== Wi-Fi 写入逻辑执行完毕，准备重启网络 =========="
                     echo '{"result":0}'
                     ( exec >/dev/null 2>&1 </dev/null; sleep 4; wifi up; wifi reload ) &
                     exit 0
                 fi
                 
-                # 第一次开机配置后针对其他模式（路由、旁路由等）的解除
-                if [ "$(uci -q get luci.main.index)" = "admin/netwiz" ]; then
-                    uci delete luci.main.index
-                    uci commit luci
-                fi
-
                 echo '{"result":0}'
                 ( exec >/dev/null 2>&1 </dev/null; sleep 4; /etc/init.d/network restart; /etc/init.d/dnsmasq restart; /etc/init.d/uhttpd restart ) &
                 exit 0
