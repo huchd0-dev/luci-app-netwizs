@@ -519,3 +519,18 @@ msgstr "2.4G Wi-Fi 帐号"
 
 msgid "No Password"
 msgstr "无密码"
+
+msgid "Enable Wireless Relay (WISP)"
+msgstr "启用无线中继 (WISP)"
+
+msgid "Wireless Relay: Enabled"
+msgstr "已开启无线中继"
+
+msgid "🔄 Scan Nearby Wi-Fi"
+msgstr "🔄 扫描附近 Wi-Fi"
+
+msgid "Select Upstream Network"
+msgstr "选择上级网络"
+
+msgid "Password for upstream:"
+msgstr "上级 Wi-Fi 密码："
