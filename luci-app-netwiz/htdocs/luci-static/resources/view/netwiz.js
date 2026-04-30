@@ -182,6 +182,7 @@ var T = {
     'BTN_SCAN': _('🔄 Scan Nearby Wi-Fi'),
     'MODAL_WISP_TITLE': _('Select Upstream Network'),
     'WISP_PWD_PROMPT': _('Password for upstream:'),
+    'TXT_WISP_ON': _('WISP Enabled'),
 };
 
 var callNetSetup = rpc.declare({ object: 'netwiz', method: 'set_network', params: ['mode', 'arg1', 'arg2', 'arg3', 'arg4', 'arg5', 'arg6'], expect: { result: 0 } });
@@ -944,7 +945,7 @@ return view.extend({
                             // 暴力判定：只要是 sta 模式，就是中继！
                             if (i.mode === 'sta') {
                                 // 中继模式：绿字标题，绝对不显示密码括号！
-                                var tLbl = "<b style='color:#10b981;padding: 8px 16px;background: #fff;border-radius: 10px;'>已开启无线中继</b>";
+                                var tLbl = "<b style='color:#10b981;padding: 8px 16px;background: #fff;border-radius: 10px;'>" + T['TXT_WISP_ON'] + "</b>";
                                 wifiLines.push("<div style='display:flex; align-items:center; justify-content:center; gap:8px;'><span><span style='font-size:15.5px; opacity:0.9; font-weight: 600;'>" + tLbl + ":</span> <span class='nw-hl' style='font-size:16.5px; letter-spacing:0.5px; margin-left:4px;'>" + sName + "</span></span></div>");
                             } else {
                                 // 正常 AP 模式：判断是 2.4G 还是 5G，并显示密码
