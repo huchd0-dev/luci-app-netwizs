@@ -1450,16 +1450,17 @@ return view.extend({
                                         btnScanLive.style.display = 'none';
                                     }
                                     
-                                    // 5. 光标对焦自动全选
-                                    setTimeout(function() {
-                                        var pwdInput = container.querySelector('#wisp-target-key');
-                                        // 只要选中的不是“无密码(none)”的 Wi-Fi
-                                        if (pwdInput && encVal !== 'none') {
-                                            pwdInput.focus();
-                                            // 全选框内的旧内容
-                                            pwdInput.select(); 
+                                    // 5. 光标对焦自动全选 (必须同步执行，否则浏览器会拦截焦点)
+                                    var pwdInput = container.querySelector('#wisp-target-key');
+                                    // 只要选中的不是“无密码(none)”的 Wi-Fi
+                                    if (pwdInput && encVal !== 'none') {
+                                        pwdInput.focus();
+                                        try {
+                                            pwdInput.setSelectionRange(0, 9999);
+                                        } catch(e) {
+                                            pwdInput.select();
                                         }
-                                    }, 300); // 延300 毫秒，确保动画和 CSS 完全渲染
+                                    }
                                     
                                 } catch(err) {
                                     console.error("选取 Wi-Fi 时发生错误:", err);
