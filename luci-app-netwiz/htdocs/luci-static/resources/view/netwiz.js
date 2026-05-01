@@ -1450,16 +1450,16 @@ return view.extend({
                                         btnScanLive.style.display = 'none';
                                     }
                                     
-                                    // 5. 光标对焦自动全选 (必须同步执行，否则浏览器会拦截焦点)
+                                    // 5. 混合双重对焦
                                     var pwdInput = container.querySelector('#wisp-target-key');
-                                    // 只要选中的不是“无密码(none)”的 Wi-Fi
                                     if (pwdInput && encVal !== 'none') {
+                                        // 在点击的同步线程焦点
                                         pwdInput.focus();
-                                        try {
-                                            pwdInput.setSelectionRange(0, 9999);
-                                        } catch(e) {
-                                            pwdInput.select();
-                                        }
+                                        
+                                        setTimeout(function() {
+                                            pwdInput.focus();
+                                            pwdInput.select(); // 密码框仅支持原生 select()
+                                        }, 50); 
                                     }
                                     
                                 } catch(err) {
