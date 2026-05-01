@@ -389,7 +389,7 @@ case "$1" in
                             if [ -n "$wan_zone" ]; then
                                 old_nets=$(uci -q get firewall.$wan_zone.network || echo "")
                                 if echo "$old_nets" | grep -q "wwan"; then
-                                    # 巧用 sed 和 xargs 移除 wwan 并清理多余空格
+                                    # 移除 wwan 并清理多余空格
                                     new_nets=$(echo "$old_nets" | sed 's/\bwwan\b//g' | xargs)
                                     uci set firewall.$wan_zone.network="$new_nets"
                                     uci commit firewall
