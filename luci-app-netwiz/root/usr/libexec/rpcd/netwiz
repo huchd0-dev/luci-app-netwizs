@@ -380,9 +380,21 @@ case "$1" in
                                 fi
                             fi
                         else
-                            log "清理无线中继虚拟接口"
+                            log "清理无线中继虚拟接口及防火墙残留"
                             uci delete wireless.wisp_sta 2>/dev/null || true
                             uci delete network.wwan 2>/dev/null || true
+                            
+                            # 剔除防火墙中的 wwan 残留
+                            wan_zone=$(uci show firewall | grep "\.name='wan'" | cut -d'.' -f2 | head -n1 || echo "")
+                            if [ -n "$wan_zone" ]; then
+                                old_nets=$(uci -q get firewall.$wan_zone.network || echo "")
+                                if echo "$old_nets" | grep -q "wwan"; then
+                                    # 巧用 sed 和 xargs 移除 wwan 并清理多余空格
+                                    new_nets=$(echo "$old_nets" | sed 's/\bwwan\b//g' | xargs)
+                                    uci set firewall.$wan_zone.network="$new_nets"
+                                    uci commit firewall
+                                fi
+                            fi
                         fi
 
                         log ">>> [步骤 5/5] 所有配置已就绪，正在执行系统 Commit 并重启网络服务..."
