@@ -1313,14 +1313,18 @@ return view.extend({
                 // 防止系统自动触发时覆盖数据
                 if (!e.isTrusted) return;
 
-                // 备份现有的独立账号密码
+                // 备份现有的独立账号密码及漫游状态
+                var roam2gEl = container.querySelector('#wifi-2g-roaming');
+                var roam5gEl = container.querySelector('#wifi-5g-roaming');
                 window._backupSplit = {
                     s2: container.querySelector('#wifi-2g-ssid').value,
                     k2: container.querySelector('#wifi-2g-key').value,
                     e2: container.querySelector('#wifi-2g-enc').value,
+                    r2: roam2gEl ? roam2gEl.checked : false, // 备份 2.4G 漫游状态
                     s5: container.querySelector('#wifi-5g-ssid').value,
                     k5: container.querySelector('#wifi-5g-key').value,
-                    e5: container.querySelector('#wifi-5g-enc').value
+                    e5: container.querySelector('#wifi-5g-enc').value,
+                    r5: roam5gEl ? roam5gEl.checked : true   // 备份 5G 漫游状态
                 };
 
                 // 获取已开启频段的信息优先5G
@@ -1349,15 +1353,20 @@ return view.extend({
                 // 防止系统加载时覆盖底层数据
                 if (!e.isTrusted) return;
 
-                // 恢复之前备份的独立账号密码
+                // 恢复之前备份的独立账号密码及漫游状态
+                var targetRoam2g = false; // 2.4G 漫游默认安全关闭 (保护智能家居)
+                var targetRoam5g = true;  // 5G 漫游默认开启 (保障手机体验)
+                
                 if (window._backupSplit && (window._backupSplit.s2 || window._backupSplit.s5)) {
                     container.querySelector('#wifi-2g-ssid').value = window._backupSplit.s2;
                     container.querySelector('#wifi-2g-key').value = window._backupSplit.k2;
                     container.querySelector('#wifi-2g-enc').value = window._backupSplit.e2;
+                    targetRoam2g = window._backupSplit.r2; // 恢复历史状态
                     
                     container.querySelector('#wifi-5g-ssid').value = window._backupSplit.s5;
                     container.querySelector('#wifi-5g-key').value = window._backupSplit.k5;
                     container.querySelector('#wifi-5g-enc').value = window._backupSplit.e5;
+                    targetRoam5g = window._backupSplit.r5; // 恢复历史状态
                 } else {
                     // 无备份时自动生成独立名称
                     var baseSsid = container.querySelector('#wifi-smart-ssid').value;
@@ -1372,6 +1381,12 @@ return view.extend({
                     container.querySelector('#wifi-5g-key').value = baseKey;
                     container.querySelector('#wifi-5g-enc').value = baseEnc;
                 }
+                
+                // 应用漫游开关状态，并触发 change 事件以同步 UI (比如加密方式的降级警告)
+                var r2gEl = container.querySelector('#wifi-2g-roaming');
+                if (r2gEl) { r2gEl.checked = targetRoam2g; r2gEl.dispatchEvent(new Event('change')); }
+                var r5gEl = container.querySelector('#wifi-5g-roaming');
+                if (r5gEl) { r5gEl.checked = targetRoam5g; r5gEl.dispatchEvent(new Event('change')); }
             }
         });
 
