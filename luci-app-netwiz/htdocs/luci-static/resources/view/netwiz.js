@@ -861,6 +861,18 @@ return view.extend({
                                         dev5g = wDevs.find(d => d['.name'] !== dev2g['.name']);
                                     }
 
+                                    console.log("============== [Netwiz 硬件嗅探] ==============");
+                                    console.log("检测到物理射频芯片数量:", wDevs.length);
+                                    if (window._isSingleChip) {
+                                        console.log("架构判断: 【单芯片处理中心】 (Single-Chip)");
+                                        console.log("目标核心:", wDevs[0]['.name']);
+                                    } else {
+                                        console.log("架构判断: 【多芯片独立阵列】 (Multi-Chip)");
+                                        console.log("2.4G 物理芯片:", dev2g ? dev2g['.name'] : "未挂载");
+                                        console.log("5G  物理芯片:", dev5g ? dev5g['.name'] : "未挂载");
+                                    }
+                                    console.log("===============================================");
+                                    
                                     var i2g = findMainIfaceForDev(dev2g ? dev2g['.name'] : 'none');
                                     var i5g = findMainIfaceForDev(dev5g ? dev5g['.name'] : 'none');
 
