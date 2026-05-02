@@ -508,8 +508,5 @@ msgstr "已開通漫遊"
 msgid "Click to Fix"
 msgstr "點擊修復"
 
-msgid "Click to Config"
-msgstr "點擊設定"
-
 msgid "Click to Settings"
 msgstr "點擊直達設定"
