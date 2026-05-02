@@ -1805,7 +1805,7 @@ return view.extend({
                             }
                             
                             var isChanged = (sNew !== sOld);
-                            var dimStyle = "opacity: 0.45; filter: grayscale(100%);";
+                            var dimStyle = "opacity: 0.75; filter: grayscale(100%);";
                             var highlightBadge = "<span style='margin-left: 8px; font-size: 11px; background: #10b981; color: #fff; padding: 2px 6px; border-radius: 6px; font-weight: bold; vertical-align: middle; box-shadow: 0 2px 4px rgba(16,185,129,0.3); animation: pulse 2s infinite;'>新修改</span>";
                             
                             if (isChanged) {
