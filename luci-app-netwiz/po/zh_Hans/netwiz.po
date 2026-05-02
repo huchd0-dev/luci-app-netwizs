@@ -508,9 +508,6 @@ msgstr "已开通漫游"
 msgid "Click to Fix"
 msgstr "点击修复"
 
-msgid "Click to Config"
-msgstr "点击设置"
-
 msgid "Click to Settings"
 msgstr "点击直达设置"
 
