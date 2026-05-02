@@ -1148,14 +1148,56 @@ return view.extend({
                     if (activeIfaces.length === 0) {
                         wifiLines.push("<div><span>" + T['TXT_WIFI_STATUS'] + ": </span><b style='color:#ef4444;'>" + T['TXT_OFF'] + "</b></div>");
                     } else {
-                        activeIfaces.forEach(function(i) {
+                        var apIfaces = activeIfaces.filter(function(i) { return i.mode === 'ap'; });
+                        var staIfaces = activeIfaces.filter(function(i) { return i.mode === 'sta'; });
+                        
+                        // 1. 中继网络 (STA) 照常独立显示
+                        staIfaces.forEach(function(i) {
+                            var sName = i.ssid;
+                            var tLbl = "<b style='color:#10b981; padding:8px 10px; background:#ffffff; border-radius:8px; font-size:14.5px; white-space:nowrap; box-shadow:0 2px 4px rgba(0,0,0,0.1);'>" + T['TXT_WISP_ON'] + "</b>";
+                            wifiLines.push("<div style='display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:8px 12px; margin-bottom:8px;'><span style='display:inline-flex; align-items:center;'>" + tLbl + "<span style='font-size:15.5px; opacity:0.9; font-weight:600; margin:0 6px;'>:</span><span class='nw-hl' style='font-size:16.5px; letter-spacing:0.5px;'>" + sName + "</span></span></div>");
+                        });
+
+                        // 2. 判断 AP 是否应该合并为“多频合一”显示
+                        var isSmartGrouped = false;
+                        if (apIfaces.length > 1) {
+                            var first = apIfaces[0];
+                            isSmartGrouped = apIfaces.every(function(i) {
+                                return i.ssid === first.ssid && i.key === first.key;
+                            });
+                        }
+
+                        if (isSmartGrouped) {
+                            // 渲染合并后的单行 UI
+                            var i = apIfaces[0];
                             var sName = i.ssid;
                             var kTxt = i.key || "<span style='color:#ef4444;'>" + T['TXT_NO_PASS'] + "</span>";
+                            var tLbl = "<b style='color:#7e22ce; background:#ffffff; padding:8px 10px; border-radius:8px; font-size:14.5px; white-space:nowrap; box-shadow:0 2px 4px rgba(0,0,0,0.1);'>" + T['LBL_SMART_CONN'] + "</b>";
+                            var bandStr = 'smart';
                             
-                            if (i.mode === 'sta') {
-                                var tLbl = "<b style='color:#10b981;padding: 8px 16px;background: #fff;border-radius: 10px;'>" + T['TXT_WISP_ON'] + "</b>";
-                                wifiLines.push("<div style='display:flex; align-items:center; justify-content:center; gap:8px;'><span><span style='font-size:15.5px; opacity:0.9; font-weight: 600;'>" + tLbl + ":</span> <span class='nw-hl' style='font-size:16.5px; letter-spacing:0.5px; margin-left:4px;'>" + sName + "</span></span></div>");
-                            } else {
+                            var rOn = apIfaces.some(function(x) { return x.ieee80211r === '1'; });
+                            var isDirty = apIfaces.some(function(x) {
+                                var enc = (x.encryption || '').toLowerCase();
+                                var md = (x.mobility_domain || '').toLowerCase(); // 增加大小写容错
+                                return x.ieee80211r === '1' && (md !== 'e4d1' || (enc !== 'psk2+sae' && enc !== 'sae-mixed'));
+                            });
+                            
+                            var roamBadge = "";
+                            if (rOn) {
+                                var clickFn = "if(window._gotoRoam){ window._gotoRoam('" + bandStr + "', " + isDirty + "); }";
+                                var hoverStyle = "onmouseover=\"this.style.transform='translateY(-2px)'; this.style.boxShadow='0 3px 6px rgba(16,185,129,0.3)'\" onmouseout=\"this.style.transform='none'; this.style.boxShadow='none'\"";
+                                if (isDirty) {
+                                    roamBadge = "<span title='" + T['DESC_ROAM_DIRTY'] + " - " + T['TXT_CLICK_FIX'] + "' onclick=\"" + clickFn + "\" " + hoverStyle + " style='display:inline-block; white-space:nowrap; background:rgba(16, 185, 129, 0.2); color:#a7f3d0; border: 1px solid #10b981; font-size:11px; padding:2px 6px; border-radius:4px; margin-left:8px; vertical-align:text-bottom; font-family:sans-serif; cursor:pointer; transition:all 0.2s ease;'>" + T['TXT_ROAMING'] + "<b style='display:inline-block; background:#ef4444; color:#ffffff; width:15px; height:15px; line-height:15px; text-align:center; border-radius:50%; font-size:12px; font-family:Arial,sans-serif; font-weight:bold; margin-left:4px;'>!</b></span>";
+                                } else {
+                                    roamBadge = "<span title='" + T['TXT_CLICK_GOTO'] + "' onclick=\"" + clickFn + "\" " + hoverStyle + " style='display:inline-block; white-space:nowrap; background:rgba(16, 185, 129, 0.2); color:#a7f3d0; border: 1px solid #10b981; font-size:11px; padding:2px 6px; border-radius:4px; margin-left:8px; vertical-align:text-bottom; font-family:sans-serif; cursor:pointer; transition:all 0.2s ease;'>" + T['TXT_ROAMING'] + "</span>";
+                                }
+                            }
+                            wifiLines.push("<div style='display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:8px 12px; margin-bottom:8px;'><span style='display:inline-flex; align-items:center;'><span style='font-size:15.5px; opacity:0.9; font-weight:600; white-space:nowrap;'>" + tLbl + ":</span><span class='nw-hl' style='font-size:16.5px; letter-spacing:0.5px; display:inline-flex; align-items:center; margin-left:6px;'>" + sName + roamBadge + "</span></span><span style='color:#ffffff; font-size:15px; font-weight:600; white-space:nowrap;'>(" + T['M_PWD'] + ": " + kTxt + ")</span></div>");
+                        } else {
+                            // 3. 渲染独立频段 UI
+                            apIfaces.forEach(function(i) {
+                                var sName = i.ssid;
+                                var kTxt = i.key || "<span style='color:#ef4444;'>" + T['TXT_NO_PASS'] + "</span>";
                                 var tLbl = "Wi-Fi";
                                 var bandStr = '2g';
                                 var dObj = wDevsList.find(function(x) { return x['.name'] === i.device; });
@@ -1182,17 +1224,15 @@ return view.extend({
                                     var hoverStyle = "onmouseover=\"this.style.transform='translateY(-2px)'; this.style.boxShadow='0 3px 6px rgba(16,185,129,0.3)'\" onmouseout=\"this.style.transform='none'; this.style.boxShadow='none'\"";
                                     
                                     if (isDirty) {
-                                        // 悬浮标题使用 T['DESC_ROAM_DIRTY'] - T['TXT_CLICK_FIX']，文字使用 T['TXT_ROAMING']
                                         roamBadge = "<span title='" + T['DESC_ROAM_DIRTY'] + " - " + T['TXT_CLICK_FIX'] + "' onclick=\"" + clickFn + "\" " + hoverStyle + " style='display:inline-block; white-space:nowrap; background:rgba(16, 185, 129, 0.2); color:#a7f3d0; border: 1px solid #10b981; font-size:11px; padding:2px 6px; border-radius:4px; margin-left:8px; vertical-align:text-bottom; font-family:sans-serif; cursor:pointer; transition:all 0.2s ease;'>" + T['TXT_ROAMING'] + "<b style='display:inline-block; background:#ef4444; color:#ffffff; width:15px; height:15px; line-height:15px; text-align:center; border-radius:50%; font-size:12px; font-family:Arial,sans-serif; font-weight:bold; margin-left:4px;'>!</b></span>";
                                     } else {
-                                        // 悬浮标题使用 T['TXT_CLICK_GOTO']
                                         roamBadge = "<span title='" + T['TXT_CLICK_GOTO'] + "' onclick=\"" + clickFn + "\" " + hoverStyle + " style='display:inline-block; white-space:nowrap; background:rgba(16, 185, 129, 0.2); color:#a7f3d0; border: 1px solid #10b981; font-size:11px; padding:2px 6px; border-radius:4px; margin-left:8px; vertical-align:text-bottom; font-family:sans-serif; cursor:pointer; transition:all 0.2s ease;'>" + T['TXT_ROAMING'] + "</span>";
                                     }
                                 }
                                 
-                                wifiLines.push("<div style='display:flex; align-items:center; justify-content:center; gap:8px;'><span><span style='font-size:15.5px; opacity:0.9; font-weight: 600;'>" + tLbl + ":</span> <span class='nw-hl' style='font-size:16.5px; letter-spacing:0.5px; margin-left:4px;'>" + sName + roamBadge + "</span></span><span style='color:#ffffff; font-size:16.5px; font-weight: 600; margin-left:4px; '>(" + T['M_PWD'] + ": " + kTxt + ")</span></div>");
-                            }
-                        });
+                                wifiLines.push("<div style='display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:8px 12px; margin-bottom:8px;'><span style='display:inline-flex; align-items:center;'><span style='font-size:15.5px; opacity:0.9; font-weight:600; white-space:nowrap;'>" + tLbl + ":</span><span class='nw-hl' style='font-size:16.5px; letter-spacing:0.5px; display:inline-flex; align-items:center; margin-left:6px;'>" + sName + roamBadge + "</span></span><span style='color:#ffffff; font-size:15px; font-weight:600; white-space:nowrap;'>(" + T['M_PWD'] + ": " + kTxt + ")</span></div>");
+                            });
+                        }
                     }
                     
                     var ipv6Html = "<div style='font-size:15.5px; font-weight:bold; color:#ffffff; font-family:monospace; letter-spacing:0.5px; display:flex; flex-wrap:wrap; justify-content:center; align-items:center; line-height: 1.8; margin-top: 6px;'><span style='font-weight: 900; margin-right: 8px;'>IPv6 (DHCPv6): </span>" + ipv6Label + "</div>";
@@ -1344,6 +1384,9 @@ return view.extend({
                     container.querySelector('#wifi-smart-enc').value = pickEnc;
                     smartSsidEl.dataset.initialized = 'true'; 
                 }
+                // 触发同步，自动清理切换时遗留的错误状态报警 (Dirty Flag)
+                var rSmartEl = container.querySelector('#wifi-smart-roaming');
+                if (rSmartEl) { rSmartEl.dispatchEvent(new Event('change')); }
 
             } else {
                 // 切换为独立频段
