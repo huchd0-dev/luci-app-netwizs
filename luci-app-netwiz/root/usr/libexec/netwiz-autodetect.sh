@@ -12,7 +12,7 @@ log() {
     fi
 }
 
-# === 推算子网掩码 ===
+# === 智能推算子网掩码 ===
 calc_netmask() {
     local ip="$1"
     local b="${ip%%.*}"
@@ -28,17 +28,38 @@ calc_netmask() {
 }
 
 LOCK_FILE="/var/run/netwiz_autodetect.lock"
-BAK_FILE="/etc/config/network.netwiz_bak"
+# WAN 备份名，与 LAN 向导的备份隔离
+BAK_FILE="/etc/config/network.netwiz_wan_bak"
+
+# ================= 退出与异常清理机制 =================
+cleanup() {
+    rm -f "$LOCK_FILE"
+    # 如果脚本退出时，备份文件依然存在，说明脚本被意外中止
+    if [ -f "$BAK_FILE" ]; then
+        log "⚠️ 检测到脚本被外部异常中断，触发安全清理，正在恢复原配置..."
+        cp "$BAK_FILE" /etc/config/network
+        rm -f "$BAK_FILE"
+        /etc/init.d/network reload &
+    fi
+}
+# 捕获 EXIT(正常或报错退出), INT(Ctrl+C), TERM(系统kill)
+trap cleanup EXIT INT TERM
+# ==========================================================
+
+# 防止 kill -9 (强制抹杀，不触发 trap) 导致的残酷遗留
+if [ -f "$BAK_FILE" ] && [ ! -f "$LOCK_FILE" ]; then
+    log "警告：发现无主遗留备份文件，先恢复配置..."
+    cp "$BAK_FILE" /etc/config/network
+    rm -f "$BAK_FILE"
+fi
 
 if [ -f "$LOCK_FILE" ]; then exit 0; fi
 touch "$LOCK_FILE"
-trap "rm -f $LOCK_FILE" EXIT INT TERM
 
 WAN_DEV=$(uci -q get network.wan.device)
 [ -z "$WAN_DEV" ] && WAN_DEV=$(uci -q get network.wan.ifname)
 [ -z "$WAN_DEV" ] && WAN_DEV="eth0"
 
-# === 多目标探测 ===
 wait_for_internet() {
     local max_wait=20
     local i=0
@@ -56,7 +77,7 @@ wait_for_internet() {
             return 1
         fi
         
-        # 多目标 Ping，只要有一个通就算有网
+        # 多目标 Ping，只要一个通就算有网
         if ping -c 1 -W 1 223.5.5.5 >/dev/null 2>&1 || \
            ping -c 1 -W 1 114.114.114.114 >/dev/null 2>&1 || \
            ping -c 1 -W 1 8.8.8.8 >/dev/null 2>&1; then
@@ -86,7 +107,7 @@ SAVED_STATIC_GW=$(uci -q get network.wan.gateway)
 SAVED_STATIC_MASK=$(uci -q get network.wan.netmask)
 success=0
 
-# 1：切换 DHCP
+# 1、切换DHCP
 if [ "$ORIG_PROTO" != "dhcp" ]; then
     log "正在尝试通过 DHCP 自动获取 IP 地址..."
     uci set network.wan.proto='dhcp'
@@ -95,7 +116,6 @@ if [ "$ORIG_PROTO" != "dhcp" ]; then
     if wait_for_internet; then success=1; fi
 fi
 
-# 封装静态 IP 注入动作
 test_static_ip() {
     local try_mask="$1"
     log "正在探测静态 IP: $SAVED_STATIC_IP，网关: $SAVED_STATIC_GW，掩码: $try_mask"
@@ -109,28 +129,25 @@ test_static_ip() {
     if wait_for_internet; then return 0; else return 1; fi
 }
 
-# 2：切换 静态 IP
+# 2、切换静态 IP
 if [ "$success" -eq 0 ] && [ "$ORIG_PROTO" != "static" ] && [ -n "$SAVED_STATIC_IP" ] && [ -n "$SAVED_STATIC_GW" ]; then
     CALC_MASK=$(calc_netmask "$SAVED_STATIC_IP")
     
     if [ -n "$SAVED_STATIC_MASK" ]; then
-        # 1. 优先使用原保存的掩码
         if test_static_ip "$SAVED_STATIC_MASK"; then
             success=1
         else
-            # 2. 原掩码失败，用推算的试一次！
             if [ "$SAVED_STATIC_MASK" != "$CALC_MASK" ]; then
                 log "原掩码无响应，尝试切换为推算掩码再试..."
                 if test_static_ip "$CALC_MASK"; then success=1; fi
             fi
         fi
     else
-        # 没有历史掩码，直接用推算的
         if test_static_ip "$CALC_MASK"; then success=1; fi
     fi
 fi
 
-# 3：切换 PPPoE
+# 3、切换 PPPoE
 if [ "$success" -eq 0 ] && [ "$ORIG_PROTO" != "pppoe" ] && [ -n "$HAS_PPPOE_USER" ]; then
     log "前置探测均失败，正在探测 PPPoE 服务器..."
     cp "$BAK_FILE" /etc/config/network
@@ -151,4 +168,5 @@ else
     /etc/init.d/network reload
 fi
 
+# 正常退出时，清理变量已消除，Trap 将只执行清理 LOCK_FILE
 exit 0
