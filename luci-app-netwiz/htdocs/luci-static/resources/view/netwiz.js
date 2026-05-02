@@ -1384,9 +1384,12 @@ return view.extend({
                     container.querySelector('#wifi-smart-enc').value = pickEnc;
                     smartSsidEl.dataset.initialized = 'true'; 
                 }
-                // 触发同步，自动清理切换时遗留的错误状态报警 (Dirty Flag)
+                // 切换为合一模式时，强行开启漫游开关，并同步清理报警
                 var rSmartEl = container.querySelector('#wifi-smart-roaming');
-                if (rSmartEl) { rSmartEl.dispatchEvent(new Event('change')); }
+                if (rSmartEl) { 
+                    rSmartEl.checked = true; 
+                    rSmartEl.dispatchEvent(new Event('change')); 
+                }
 
             } else {
                 // 切换为独立频段
@@ -1397,19 +1400,19 @@ return view.extend({
                 if (!e.isTrusted) return;
 
                 // 恢复之前备份的独立账号密码及漫游状态
-                var targetRoam2g = false; // 2.4G 漫游默认安全关闭 (保护智能家居)
-                var targetRoam5g = true;  // 5G 漫游默认开启 (保障手机体验)
+                var targetRoam2g = false; // 2.4G 漫游默认安全关闭
+                var targetRoam5g = true;  // 5G 漫游默认开启
                 
                 if (window._backupSplit && (window._backupSplit.s2 || window._backupSplit.s5)) {
                     container.querySelector('#wifi-2g-ssid').value = window._backupSplit.s2;
                     container.querySelector('#wifi-2g-key').value = window._backupSplit.k2;
                     container.querySelector('#wifi-2g-enc').value = window._backupSplit.e2;
-                    targetRoam2g = window._backupSplit.r2; // 恢复历史状态
+                    // targetRoam2g = window._backupSplit.r2; // 强制使用默认值 false
                     
                     container.querySelector('#wifi-5g-ssid').value = window._backupSplit.s5;
                     container.querySelector('#wifi-5g-key').value = window._backupSplit.k5;
                     container.querySelector('#wifi-5g-enc').value = window._backupSplit.e5;
-                    targetRoam5g = window._backupSplit.r5; // 恢复历史状态
+                    // targetRoam5g = window._backupSplit.r5; // 强制使用默认值 true
                 } else {
                     // 无备份时自动生成独立名称
                     var baseSsid = container.querySelector('#wifi-smart-ssid').value;
@@ -1475,19 +1478,17 @@ return view.extend({
         var smartRoamingToggle = container.querySelector('#wifi-smart-roaming');
         if (smartRoamingToggle) {
             smartRoamingToggle.addEventListener('change', function(e) {
-                if (e && e.isTrusted) {
-                    if (this.classList.contains('is-dirty')) {
-                        this.classList.remove('is-dirty'); 
-                        window._origWifiState = 'force_submit'; 
-                    }
-                    
-                    var warn = container.querySelector('#roam-warn-smart');
-                    if (warn) warn.style.display = 'none'; 
-                    
-                    if (this.checked) {
-                        var encSelect = container.querySelector('#wifi-smart-enc');
-                        if (encSelect && encSelect.value !== 'psk2+sae') encSelect.value = 'psk2+sae';
-                    }
+                // 移除 isTrusted 限制，允许程序自动切换时触发联动修复
+                if (this.classList.contains('is-dirty')) {
+                    this.classList.remove('is-dirty'); 
+                    window._origWifiState = 'force_submit'; 
+                }
+                var warn = container.querySelector('#roam-warn-smart');
+                if (warn) warn.style.display = 'none'; 
+                
+                if (this.checked) {
+                    var encSelect = container.querySelector('#wifi-smart-enc');
+                    if (encSelect && encSelect.value !== 'psk2+sae') encSelect.value = 'psk2+sae';
                 }
             });
         }
@@ -1496,19 +1497,16 @@ return view.extend({
         var r2gToggle = container.querySelector('#wifi-2g-roaming');
         if (r2gToggle) {
             r2gToggle.addEventListener('change', function(e) {
-                if (e && e.isTrusted) {
-                    if (this.classList.contains('is-dirty')) {
-                        this.classList.remove('is-dirty');
-                        window._origWifiState = 'force_submit';
-                    }
+                if (this.classList.contains('is-dirty')) {
+                    this.classList.remove('is-dirty');
+                    window._origWifiState = 'force_submit';
+                }
+                var warn = container.querySelector('#roam-warn-2g');
+                if (warn) warn.style.display = 'none';
 
-                    var warn = container.querySelector('#roam-warn-2g');
-                    if (warn) warn.style.display = 'none';
-
-                    if (this.checked) {
-                        var encSelect = container.querySelector('#wifi-2g-enc');
-                        if (encSelect && encSelect.value !== 'psk2+sae') encSelect.value = 'psk2+sae';
-                    }
+                if (this.checked) {
+                    var encSelect = container.querySelector('#wifi-2g-enc');
+                    if (encSelect && encSelect.value !== 'psk2+sae') encSelect.value = 'psk2+sae';
                 }
             });
         }
@@ -1517,19 +1515,16 @@ return view.extend({
         var r5gToggle = container.querySelector('#wifi-5g-roaming');
         if (r5gToggle) {
             r5gToggle.addEventListener('change', function(e) {
-                if (e && e.isTrusted) {
-                    if (this.classList.contains('is-dirty')) {
-                        this.classList.remove('is-dirty');
-                        window._origWifiState = 'force_submit';
-                    }
+                if (this.classList.contains('is-dirty')) {
+                    this.classList.remove('is-dirty');
+                    window._origWifiState = 'force_submit';
+                }
+                var warn = container.querySelector('#roam-warn-5g');
+                if (warn) warn.style.display = 'none';
 
-                    var warn = container.querySelector('#roam-warn-5g');
-                    if (warn) warn.style.display = 'none';
-
-                    if (this.checked) {
-                        var encSelect = container.querySelector('#wifi-5g-enc');
-                        if (encSelect && encSelect.value !== 'psk2+sae') encSelect.value = 'psk2+sae';
-                    }
+                if (this.checked) {
+                    var encSelect = container.querySelector('#wifi-5g-enc');
+                    if (encSelect && encSelect.value !== 'psk2+sae') encSelect.value = 'psk2+sae';
                 }
             });
         }
