@@ -395,7 +395,7 @@ return view.extend({
             '        <div class="nw-value"><label class="nw-value-title">{{LBL_USER}}</label><div class="nw-value-field"><textarea id="pppoe-user" placeholder="{{PH_USER}}" rows="2"></textarea></div></div>',
             // 宽带密码
             '        <div class="nw-value"><label class="nw-value-title">{{LBL_PASS}}</label><div class="nw-value-field"><input type="text" id="pppoe-pass" placeholder="{{PH_PASS}}"></div></div>',
-            '        <div style="margin-top: 15px; padding: 10px; border-radius: 8px; font-size: 14px; color: #ef4444; font-weight: 600;">{{MSG_WAN_AUTODETECT}}</div>',
+            '        <div style="padding: 10px; border-radius: 8px; font-size: 14px; color: #ef4444; font-weight: 600;">{{MSG_WAN_AUTODETECT}}</div>',
             '      </div>',
             '      <div id="fields-wifi" style="display: none;">',
             '        <div class="nw-step-title">{{TITLE_WIFI}}</div>',
