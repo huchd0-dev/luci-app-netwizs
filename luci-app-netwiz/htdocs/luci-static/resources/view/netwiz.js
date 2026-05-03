@@ -2018,10 +2018,11 @@ return view.extend({
                             ]);
                         }
                         
-                        if (selectedMode === 'lan' && !isBypass && targetGw !== '') { openModal({ title: T['M_WARN_TIT'], msg: T['M_WARN_MSG'], cancelText: T['BTN_EDIT'], okText: T['M_WARN_BTN'], isDanger: true, onOk: function() { container.querySelector('#nw-global-modal').style.display = 'none'; step2.style.display = 'none'; step3.style.display = 'block'; window.scrollTo(0, 0); } }); return; }
+                        if (selectedMode === 'lan' && !isBypass && targetGw !== '') { openModal({ title: T['M_WARN_TIT'], msg: T['M_WARN_MSG'], cancelText: T['BTN_EDIT'], okText: T['M_WARN_BTN'], isDanger: true, onOk: function() { container.querySelector('#nw-global-modal').style.display = 'none'; step2.style.display = 'none'; step3.style.display = 'block'; setTimeout(function(){ var h = document.querySelector('.nw-header'); if(h) h.scrollIntoView({behavior: 'smooth', block: 'start'}); }, 50); } }); return; }
                         
                         step2.style.display = 'none'; step3.style.display = 'block';
-                        window.scrollTo(0, 0); // 置顶
+                        // 使用延时锚点置顶
+                        setTimeout(function(){ var h = document.querySelector('.nw-header'); if(h) h.scrollIntoView({behavior: 'smooth', block: 'start'}); }, 50);
                     } catch (err) {
                         openModal({ title: T['M_SYS_ERR'], msg: 'Data processing failed: ' + err, okText: T['M_CLOSE'] });
                     }
