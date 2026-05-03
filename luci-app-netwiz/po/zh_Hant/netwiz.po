@@ -552,3 +552,12 @@ msgstr "✨ 重新打開精靈"
 
 msgid "Skip Wi-Fi Setup (Keep current)"
 msgstr "暫不設定 Wi-Fi (保持現狀)"
+
+msgid "Not configured (Keep current)"
+msgstr "暫不設定 (保持當前狀態)"
+
+msgid "Not set"
+msgstr "未設定"
+
+msgid "No Password (Open)"
+msgstr "無密碼 (Open)"
