@@ -195,7 +195,7 @@ var T = {
     'WIZ_WIFI': _('Step 2: Wi-Fi Setup'),
     'WIZ_WIFI_DESC': _('Set your wireless network name and password.'),
     'WIZ_CONFIRM': _('Step 3: Confirm & Apply'),
-    'WIZ_SKIP': _('Skip Wizard'),
+    'WIZ_SKIP': _('Skip this time'),
     'WIZ_HIDE': _("Don't show this again"),
     'WIZ_REOPEN': _('✨ Reopen Wizard'),
     'WIZ_SKIP_WIFI': _('Skip Wi-Fi Setup (Keep current)'),
@@ -783,15 +783,20 @@ return view.extend({
         var wizHideCb = container.querySelector('#wiz-hide-checkbox');
         var currentWizStep = 1;
 
-        // 1. 退出/跳过向导逻辑
+        // 1. 右上角 (X) 退出
         var closeWizard = function() {
             if (wizHideCb.checked) {
-                silentSaveWizardState('0'); // 调用静默武器！
+                silentSaveWizardState('0'); // 如果勾选了“不再提示”，调用静默武器永久关闭向导
             }
             wizModal.style.display = 'none';
         };
         container.querySelector('#wiz-modal-close').addEventListener('click', closeWizard);
-        container.querySelector('#wiz-btn-skip').addEventListener('click', closeWizard);
+
+        // 1.1 跳过本次,保留下次弹出
+        container.querySelector('#wiz-btn-skip').addEventListener('click', function() {
+            if (wizHideCb) wizHideCb.checked = false; 
+            wizModal.style.display = 'none'; 
+        });
 
         // 1.5 首页按钮重新打开向导逻辑
         var btnReopenWiz = container.querySelector('#btn-reopen-wizard');
