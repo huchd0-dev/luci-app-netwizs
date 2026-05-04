@@ -2256,6 +2256,21 @@ return view.extend({
                             if (e5 !== 'none' && (!k5 || k5.length < 8)) { openModal({title: T['M_FMT_TIT'], msg: T['M_PWD_SHORT'], okText: T['BTN_EDIT']}); return; }
                         }
                     }
+                    // WISP 密码校验
+                    var wispTog = container.querySelector('#wisp-toggle');
+                    if (wispTog && wispTog.checked) {
+                        var wispSsid = container.querySelector('#wisp-target-ssid').value.trim();
+                        if (!wispSsid) {
+                            openModal({title: T['M_INC_TIT'], msg: T['MODAL_WISP_TITLE'], okText: T['BTN_EDIT']});
+                            return;
+                        }
+                        var wispEnc = container.querySelector('#wisp-target-enc').value;
+                        var wispKey = container.querySelector('#wisp-target-key').value;
+                        if (wispEnc !== 'none' && (!wispKey || wispKey.length < 8)) {
+                            openModal({title: T['M_FMT_TIT'], msg: T['M_PWD_SHORT'], okText: T['BTN_EDIT']});
+                            return;
+                        }
+                    }
                 }
                 
                 uci.load('network').then(function() {
@@ -2574,11 +2589,13 @@ return view.extend({
                     // WISP 参数打包
                     var wispTog = container.querySelector('#wisp-toggle');
                     if (wispTog) {
+                        var targetEnc = container.querySelector('#wisp-target-enc').value;
                         payload.wisp = {
                             enabled: wispTog.checked ? "1" : "0",
                             ssid: container.querySelector('#wisp-target-ssid').value,
-                            key: container.querySelector('#wisp-target-key').value,
-                            encryption: container.querySelector('#wisp-target-enc').value,
+                            // none，强制密码传空，防止残留脏数据导致连接失败
+                            key: (targetEnc === 'none') ? '' : container.querySelector('#wisp-target-key').value,
+                            encryption: targetEnc,
                             device: container.querySelector('#wisp-target-device').value,
                             bssid: container.querySelector('#wisp-target-bssid').value
                         };
