@@ -233,7 +233,7 @@ return view.extend({
             '/* --- 1. Base & Layout --- */',
             ' header { margin: -5px -5px 0; }',
             '#maincontent, .main-right { overflow-y: auto !important; overflow-x: hidden !important; }', 
-            '#netwiz-container { display: block !important; width: 100% !important; min-height: 101vh !important; padding: 0 !important; margin: 0 auto !important; box-sizing: border-box !important; }',
+            '#netwiz-container { display: block !important; width: 100% !important; min-height: 101vh !important; padding: 0 !important; margin: 0 auto !important; box-sizing: border-box !important; color: #64748b; }',
             '.nw-wrapper { display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: flex-start !important; width: 100% !important; max-width: 900px !important; margin: 0 auto !important; padding-bottom: 10vh; font-family: -apple-system, BlinkMacSystemFont, sans-serif; box-sizing: border-box !important; }',
             '.nw-header { display: block !important; width: 100% !important; max-width: 750px !important; margin: 0 auto 30px auto !important; text-align: center; background-color: #5e72e4; padding: 15px; border-radius: 16px; position: relative; box-sizing: border-box; box-shadow: 0 10px 25px rgba(94, 114, 228, 0.15); z-index: 20; }',
             '.nw-step { width: 100% !important; max-width: 800px !important; text-align: center; animation: slideUp 0.4s ease-out; margin: 0 auto !important; }',
