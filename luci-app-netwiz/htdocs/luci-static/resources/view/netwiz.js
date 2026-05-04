@@ -371,7 +371,7 @@ return view.extend({
             '.nw-confirm-mode-text { color: #fff; background: #0055bb; padding: 20px; border-radius: 12px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); margin-top: 15px; }',
             '.nw-current-mode-display { margin-top: 35px; background: #5e72e4; padding: 20px 35px; border-radius: 12px; display: inline-block; box-shadow: 0 8px 20px rgba(94, 114, 228, 0.3); text-align: center; min-width: 320px; }',
             /* ===== 向导头部响应式排版 (PC端默认布局) ===== */
-            '.nw-wiz-header-responsive { display: flex; justify-content: space-between; align-items: center; padding: 15px; }',
+            '.nw-wiz-header-responsive { display: flex; justify-content: space-between; align-items: center; padding: 15px 10px; }',
             '.nw-wiz-step-wrap { flex: 1; display: flex; justify-content: flex-start; order: 1; }',
             '.nw-wiz-title-responsive { flex: 2; margin: 0; padding: 0; text-align: center; font-size: 18px; letter-spacing: 0.5px; white-space: nowrap; color: #fff; order: 2; }',
             '.nw-wiz-close-wrap { flex: 1; display: flex; justify-content: flex-end; order: 3; }',
@@ -421,7 +421,7 @@ return view.extend({
             '  .nw-wiz-header-responsive { flex-wrap: wrap; padding: 12px 15px !important; }',
             '  .nw-wiz-title-responsive { flex: 1; text-align: center; font-size: 17px; order: 1; }',
             '  .nw-wiz-close-wrap { flex: 0 0 auto; order: 2; }',
-            '  .nw-wiz-step-wrap { flex: 0 0 100%; justify-content: center; margin-top: 12px; order: 3; }',
+            '  .nw-wiz-step-wrap { flex: 0 0 100%; justify-content: center; margin-top: 5px; order: 3; }',
             '}',
             '</style>',
             
@@ -461,13 +461,13 @@ return view.extend({
             '  <div id="nw-wizard-modal" class="nw-wisp-modal" style="display:none;">',
             '    <div class="nw-wiz-modal-box">',
             '      <div class="nw-wiz-modal-header nw-wiz-header-responsive" style="background:#5e72e4;">',
-            '         <!-- 1 ➔ 2 ➔ 3 步 -->',
+            '         <!-- 1 ➔ 2 ➔ 3 指示器 -->',
             '         <div class="nw-wiz-step-wrap">',
             '            <div id="wiz-step-indicator" style="display: flex; align-items: center; gap: 2px;">',
             '               <div class="nw-step-dot" style="width:22px; height:22px; border-radius:50%; font-size:12px; font-weight:bold; display:flex; align-items:center; justify-content:center; transition:all 0.3s; box-sizing:border-box;">1</div>',
-            '               <div class="nw-step-line" style="display:flex; align-items:center; justify-content:center; margin:0 2px; transition:all 0.3s; background:transparent;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:16px; height:16px;"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></div>',
+            '               <div class="nw-step-line" style="display:flex; align-items:center; justify-content:center; margin:0 2px; transition:all 0.3s;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:16px; height:16px; display:block; background: transparent !important;"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></div>',
             '               <div class="nw-step-dot" style="width:22px; height:22px; border-radius:50%; font-size:12px; font-weight:bold; display:flex; align-items:center; justify-content:center; transition:all 0.3s; box-sizing:border-box;">2</div>',
-            '               <div class="nw-step-line" style="display:flex; align-items:center; justify-content:center; margin:0 2px; transition:all 0.3s; background:transparent;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:16px; height:16px;"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></div>',
+            '               <div class="nw-step-line" style="display:flex; align-items:center; justify-content:center; margin:0 2px; transition:all 0.3s;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:16px; height:16px; display:block; background: transparent !important;"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></div>',
             '               <div class="nw-step-dot" style="width:22px; height:22px; border-radius:50%; font-size:12px; font-weight:bold; display:flex; align-items:center; justify-content:center; transition:all 0.3s; box-sizing:border-box;">3</div>',
             '            </div>',
             '         </div>',
@@ -805,20 +805,20 @@ return view.extend({
         var wizHideCb = container.querySelector('#wiz-hide-checkbox');
         var currentWizStep = 1;
 
-        // 【新增】：向导步骤点阵高亮引擎
+        // 向导高亮
         var updateWizSteps = function(step) {
             var dots = container.querySelectorAll('.nw-step-dot');
             dots.forEach(function(d, i) {
                 if (i + 1 === step) {
-                    // 1. 当前进行中的步骤：突显（白底蓝字，轻微放大，发光）
+                    // 1. 当前进行中的步骤
                     d.style.background = '#ffffff';
                     d.style.color = '#5e72e4';
                     d.style.border = 'none';
-                    d.style.transform = 'scale(1.15)';
+                    d.style.transform = 'scale(1.2)';
                     d.style.boxShadow = '0 0 8px rgba(255,255,255,0.6)';
                     d.style.opacity = '1';
                 } else if (i + 1 < step) {
-                    // 2. 已经完成的步骤：柔和（半透明白底）
+                    // 2. 已经完成的步骤
                     d.style.background = 'rgba(255,255,255,0.25)';
                     d.style.color = '#ffffff';
                     d.style.border = 'none';
@@ -826,7 +826,7 @@ return view.extend({
                     d.style.boxShadow = 'none';
                     d.style.opacity = '1';
                 } else {
-                    // 3. 未来的步骤：暗淡（透明底白边框）
+                    // 3. 未来的步骤
                     d.style.background = 'transparent';
                     d.style.color = 'rgba(255,255,255,0.6)';
                     d.style.border = '1px solid rgba(255,255,255,0.4)';
@@ -837,8 +837,7 @@ return view.extend({
             });
             var lines = container.querySelectorAll('.nw-step-line');
             lines.forEach(function(l, i) {
-                l.style.background = 'transparent'; // 强制透明，彻底根除诡异底色
-                // 已经走过的箭头点亮（纯白），未走过的变暗淡（半透明）
+                l.style.setProperty('background', 'transparent', 'important'); 
                 l.style.color = (i + 1 < step) ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.3)';
             });
         };
