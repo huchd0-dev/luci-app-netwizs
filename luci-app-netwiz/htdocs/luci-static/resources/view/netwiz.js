@@ -249,7 +249,7 @@ return view.extend({
             '.nw-roam-row-alt { padding: 15px 0 5px 0; border-top: 1px dashed #cbd5e1; margin-top: 10px; margin-bottom: 0; }',
             '.nw-split-header-row { }',
             '.nw-legacy-row { padding: 15px 0 0 0; border-top: 1px solid #f1f5f9; margin-top: 15px; }',
-            '.nw-wisp-header { margin-bottom: 5px; }',
+            '.nw-wisp-header { margin: 10px; 0 5px 0 }',
 
             '/* --- 3. Header & Typography --- */',
             '.nw-main-title { font-size: 35px; font-weight: 600; margin-bottom: 10px; color: #ffffff; letter-spacing: 2px; }',
@@ -684,7 +684,7 @@ return view.extend({
             '              <div class="nw-wisp-title">{{LBL_WISP_EN}}</div>',
             '              <label class="nw-switch"><input type="checkbox" id="wisp-toggle"><span class="nw-slider"></span></label>',
             '           </div>',
-            '           <div class="nw-wisp-desc">{{DESC_WISP}}</div>',
+            '           <div class="nw-wisp-desc" style="padding:5px 0;">{{DESC_WISP}}</div>',
             '           <div id="wisp-ui-panel" class="nw-wisp-ui-panel" style="display:none;">',
             '              <button id="btn-wisp-scan" class="nw-u-btn nw-u-btn-blue" style="width: 100%;">{{BTN_SCAN}}</button>',
             '              <div id="wisp-selected-info" style="display:none; width: 100%;">',
