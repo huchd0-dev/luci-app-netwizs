@@ -783,18 +783,17 @@ return view.extend({
         var wizHideCb = container.querySelector('#wiz-hide-checkbox');
         var currentWizStep = 1;
 
-        // 1. 右上角 (X) 退出
+        // 1. 退出(X) 按钮此时勾选了“不再提示”，就执行静默写入。
         var closeWizard = function() {
-            if (wizHideCb.checked) {
-                silentSaveWizardState('0'); // 如果勾选了“不再提示”，调用静默武器永久关闭向导
+            if (wizHideCb && wizHideCb.checked) {
+                silentSaveWizardState('0'); 
             }
             wizModal.style.display = 'none';
         };
         container.querySelector('#wiz-modal-close').addEventListener('click', closeWizard);
 
-        // 1.1 跳过本次,保留下次弹出
+        // 跳过本次引导，UI 隐藏
         container.querySelector('#wiz-btn-skip').addEventListener('click', function() {
-            if (wizHideCb) wizHideCb.checked = false; 
             wizModal.style.display = 'none'; 
         });
 
