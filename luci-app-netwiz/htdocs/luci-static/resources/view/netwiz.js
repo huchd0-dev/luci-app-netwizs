@@ -266,7 +266,7 @@ return view.extend({
 
             '/* --- 4. Cards & Badges --- */',
             '.nw-card-group { display: flex; gap: 25px; justify-content: center; flex-wrap: wrap; margin-top: 20px; width: 100%; box-sizing: border-box; }',
-            '.nw-card { flex: 1; min-width: 170px; max-width: 220px; padding: 35px 20px; border-radius: 16px; cursor: pointer; backdrop-filter: blur(12px); border: 1px solid rgba(0,0,0,0.03); box-shadow: 0px 0px 15px 2px #b7b7b7; transition: all 0.25s ease; display: flex; flex-direction: column; align-items: center; box-sizing: border-box; }',
+            '.nw-card { flex: 1; min-width: 170px; max-width: 220px; padding: 35px 20px; border-radius: 16px; cursor: pointer; backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.5); box-shadow: 0px 0px 15px 2px #b7b7b7; transition: all 0.25s ease; display: flex; flex-direction: column; align-items: center; box-sizing: border-box; }',
             '.nw-card:hover { transform: translateY(-5px); }',
             '.nw-card[data-mode="pppoe"] { background: rgba(79, 150, 101, 0.85); }',
             '.nw-card[data-mode="wifi"] { background: rgba(245, 54, 92, 0.85); }', 
