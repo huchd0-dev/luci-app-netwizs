@@ -541,8 +541,8 @@ msgstr "设置您的无线网络名称和密码。"
 msgid "Step 3: Confirm & Apply"
 msgstr "第三步：确认与应用"
 
-msgid "Skip Wizard"
-msgstr "跳过向导"
+msgid "Skip this time"
+msgstr "跳过本次引导"
 
 msgid "Don't show this again"
 msgstr "不再提示"
