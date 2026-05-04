@@ -921,14 +921,24 @@ return view.extend({
                     // 渲染最终确认视图
                     var wType2 = container.querySelector('input[name="wiz_wan_type"]:checked').value;
                     var htmlConfirm = "<div style='text-align:left; font-size:15px; color: #fff;'>";
-
-                    htmlConfirm += "<div style='margin-bottom:12px; display:flex; align-items:center;'><b style='color:#facc15; margin-right:8px; flex-shrink:0;'>WAN:</b> <span>" + (wType2 === 'dhcp' ? T['OPT_DHCP'] : T['MODE_PPPOE_TITLE']) + "</span></div>";
                     
-                    if (isSkipWifi) {
-                        htmlConfirm += "<div style='display:flex; align-items:center;'><b style='color:#67e8f9; margin-right:8px; flex-shrink:0;'>Wi-Fi:</b> <span style='color:#94a3b8; font-style:italic;'>" + T['TXT_NOT_CONFIGURED'] + "</span></div>";
+                    // --- 1. WAN  ---
+                    if (wType2 === 'pppoe') {
+                        var pppoeUser = container.querySelector('#wiz-pppoe-user').value.replace(/[\r\n\s]+/g, '');
+                        var pppoePass = container.querySelector('#wiz-pppoe-pass').value;
+                        htmlConfirm += "<div style='margin-bottom:8px; display:flex; align-items:center;'><b style='color:#facc15; margin-right:8px; flex-shrink:0;'>WAN:</b> <span>" + T['MODE_PPPOE_TITLE'] + "</span></div>";
+                        htmlConfirm += "<div style='margin-bottom:8px; display:flex; align-items:center;'><b style='color:#fde047; margin-right:8px; white-space:nowrap; flex-shrink:0;'>"+ T['M_ACCT'] +":</b> <span style='word-break:break-all; opacity:0.9;'>" + escapeHTML(pppoeUser) + "</span></div>";
+                        htmlConfirm += "<div style='margin-bottom:12px; display:flex; align-items:center;'><b style='color:#fde047; margin-right:8px; white-space:nowrap; flex-shrink:0;'>"+ T['M_PWD'] +":</b> <span style='word-break:break-all; opacity:0.9;'>" + escapeHTML(pppoePass) + "</span></div>";
                     } else {
-                        htmlConfirm += "<div style='margin-bottom:12px; display:flex; align-items:center;'><b style='color:#67e8f9; margin-right:8px; flex-shrink:0;'>Wi-Fi:</b> <span style='word-break:break-all;'>" + (ssid ? escapeHTML(ssid) : "<i>" + T['TXT_UNSET'] + "</i>") + "</span></div>";
-                        htmlConfirm += "<div style='display:flex; align-items:center;'><b style='color:#a7f3d0; margin-right:8px; white-space:nowrap; flex-shrink:0;'>"+ T['M_PWD'] +":</b> <span style='word-break:break-all;'>" + (key ? escapeHTML(key) : "<i>" + T['TXT_NO_PWD_OPEN'] + "</i>") + "</span></div>";
+                        htmlConfirm += "<div style='margin-bottom:12px; display:flex; align-items:center;'><b style='color:#facc15; margin-right:8px; flex-shrink:0;'>WAN:</b> <span>" + T['OPT_DHCP'] + "</span></div>";
+                    }
+                    
+                    // --- 2. Wi-Fi  ---
+                    if (isSkipWifi) {
+                        htmlConfirm += "<div style='margin-bottom:0; display:flex; align-items:center;'><b style='color:#67e8f9; margin-right:8px; flex-shrink:0;'>Wi-Fi:</b> <span style='color:#94a3b8; font-style:italic;'>" + T['TXT_NOT_CONFIGURED'] + "</span></div>";
+                    } else {
+                        htmlConfirm += "<div style='margin-bottom:8px; display:flex; align-items:center;'><b style='color:#67e8f9; margin-right:8px; flex-shrink:0;'>Wi-Fi:</b> <span style='word-break:break-all;'>" + (ssid ? escapeHTML(ssid) : "<i>" + T['TXT_UNSET'] + "</i>") + "</span></div>";
+                        htmlConfirm += "<div style='margin-bottom:0; display:flex; align-items:center;'><b style='color:#a7f3d0; margin-right:8px; white-space:nowrap; flex-shrink:0;'>"+ T['M_PWD'] +":</b> <span style='word-break:break-all;'>" + (key ? escapeHTML(key) : "<i>" + T['TXT_NO_PWD_OPEN'] + "</i>") + "</span></div>";
                     }
                     
                     htmlConfirm += "</div>";
