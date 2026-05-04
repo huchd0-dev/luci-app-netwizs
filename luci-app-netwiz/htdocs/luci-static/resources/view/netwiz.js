@@ -423,7 +423,7 @@ return view.extend({
             '      <div class="nw-version-tag">{{APP_VERSION}} <div class="nw-version-dot" style="display: none;"></div></div>',
             '    </div>',
             '    <p>{{SUBTITLE}}</p>',
-            '    <div id="btn-reopen-wizard" style="margin-top: 15px; display: inline-flex; align-items: center; justify-content: center; gap: 5px; cursor: pointer; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2); padding: 6px 18px; border-radius: 20px; font-size: 13.5px; font-weight: 500; color: #fff; transition: all 0.25s ease;">{{WIZ_REOPEN}}</div>',
+            '    <div id="btn-reopen-wizard" style="margin-top: 10px; display: inline-flex; align-items: center; justify-content: center; gap: 5px; cursor: pointer; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2); padding: 6px 18px; border-radius: 20px; font-size: 13.5px; font-weight: 500; color: #fff; transition: all 0.25s ease;">{{WIZ_REOPEN}}</div>',
             '  </div>',
             '  <div id="nw-global-modal" style="display:none;">',
             '    <div class="nw-modal-box">',
