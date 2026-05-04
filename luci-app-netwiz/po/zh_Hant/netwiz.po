@@ -561,3 +561,12 @@ msgstr "未設定"
 
 msgid "No Password (Open)"
 msgstr "無密碼 (Open)"
+
+msgid "Wizard execution failed"
+msgstr "向導執行失敗"
+
+msgid "Configuration data processing failed"
+msgstr "配置數據處理失敗"
+
+msgid "Input validation failed"
+msgstr "輸入校驗失敗"
