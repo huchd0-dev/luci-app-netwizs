@@ -189,7 +189,7 @@ var T = {
     'TXT_MODIFIED': _('Modified'),
     'M_OPEN_WARN_TIT': _('Security Warning'),
     'M_OPEN_WARN_MSG': _('You are setting up an Open Wi-Fi network without a password. Anyone nearby will be able to connect and access your network.<br><br>Are you sure you want to continue?'),
-// ===== 向导词条 =====
+    // ===== 向导词条 =====
     'WIZ_TITLE': _('✨ Quick Setup Wizard'),
     'WIZ_WAN': _('Step 1: Internet Setup'),
     'WIZ_WIFI': _('Step 2: Wi-Fi Setup'),
@@ -237,7 +237,7 @@ return view.extend({
             '.nw-wrapper { display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: flex-start !important; width: 100% !important; max-width: 900px !important; margin: 0 auto !important; padding-bottom: 10vh; font-family: -apple-system, BlinkMacSystemFont, sans-serif; box-sizing: border-box !important; }',
             '.nw-header { display: block !important; width: 100% !important; max-width: 750px !important; margin: 0 auto 30px auto !important; text-align: center; background-color: #5e72e4; padding: 15px; border-radius: 16px; position: relative; box-sizing: border-box; box-shadow: 0 10px 25px rgba(94, 114, 228, 0.15); z-index: 20; }',
             '.nw-step { width: 100% !important; max-width: 800px !important; text-align: center; animation: slideUp 0.4s ease-out; margin: 0 auto !important; }',
-            '.nw-form-area, .nw-confirm-board { position: relative; max-width: 460px; margin: 0 auto; text-align: left; padding: 40px; border-radius: 16px; background-color: rgba(255, 255, 255, 0.88); box-shadow: 0 10px 30px rgba(0,0,0,0.06); box-sizing: border-box; display: block !important; }',
+            '.nw-form-area, .nw-confirm-board { position: relative; max-width: 460px; margin: 0 auto; text-align: left; padding: 40px; border-radius: 16px; background-color: rgba(255, 255, 255, 0.88); box-shadow: 0 10px 30px rgba(0,0,0,0.06); box-sizing: border-box; display: block !important; overflow: hidden; word-break: break-word; }',
 
             '/* --- 2. Shared Flex Rows --- */',
             '.nw-setting-row, .nw-setting-row-alt, .nw-switch-row-padded, .nw-adv-setting-row, .nw-roam-row, .nw-roam-row-alt, .nw-split-header-row, .nw-legacy-row, .nw-wisp-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }',
@@ -372,7 +372,7 @@ return view.extend({
             '.nw-note-box { background-color: #f8fafc; padding: 15px; font-size: 13.5px; margin-top: 20px; border: 1px solid #e2e8f0; line-height: 1.7; color: #475569; border-radius: 12px; }',
             '.nw-note-title { font-weight: bold; color: #0f172a; margin-bottom: 8px; font-size: 14.5px; }',
             '.nw-confirm-mode-text { color: #fff; background: #0055bb; padding: 20px; border-radius: 12px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); margin-top: 15px; }',
-            '.nw-current-mode-display { margin-top: 35px; background: #5e72e4; padding: 20px 35px; border-radius: 12px; display: inline-block; box-shadow: 0 8px 20px rgba(94, 114, 228, 0.3); text-align: center; min-width: 320px; }',
+            '.nw-current-mode-display { margin-top: 35px; background: #5e72e4; padding: 20px 35px; border-radius: 12px; display: flex; flex-direction: column; align-items: center; box-shadow: 0 8px 20px rgba(94, 114, 228, 0.3); text-align: center; min-width: 320px; max-width: 100%; box-sizing: border-box; word-break: break-all; overflow-wrap: anywhere; overflow: hidden; }',
             /* ===== 向导头部响应式排版 (PC端默认布局) ===== */
             '.nw-wiz-header-responsive { display: flex; justify-content: space-between; align-items: center; padding: 15px 10px; }',
             '.nw-wiz-step-wrap { flex: 1; display: flex; justify-content: flex-start; order: 1; }',
@@ -398,13 +398,13 @@ return view.extend({
             '@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); } 70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); } 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }',
             '#btn-reopen-wizard:hover { background: rgba(255,255,255,0.25) !important; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }',
             /* ===== 状态面板响应式类 ===== */
-            '.nw-info-item { display: inline-block; white-space: nowrap; margin: 0 10px; }',
-            '.nw-wifi-line { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px 12px; margin-bottom: 8px; width: 100%; box-sizing: border-box; }',
-            '.nw-wifi-left { display: inline-flex; flex-wrap: wrap; align-items: center; justify-content: center; max-width: 100%; }',
-            '.nw-wifi-badge { padding: 8px 10px; background: #ffffff; border-radius: 6px; font-size: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }',
-            '.nw-wifi-colon { font-size: 15.5px; opacity: 0.9; font-weight: 600; margin: 0 6px; }',
-            '.nw-wifi-name { font-size: 16.5px; letter-spacing: 0.5px; display: inline-flex; flex-wrap: wrap; justify-content: center; align-items: center; word-break: break-all; white-space: normal; text-align: center; }',
-            '.nw-wifi-pwd { color: #ffffff; font-size: 15px; font-weight: 600; white-space: nowrap; }',
+            '.nw-info-item { display: inline-block; white-space: normal; word-break: break-all; margin: 0 10px; max-width: 100%; }',
+            '.nw-wifi-line { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px 12px; margin-bottom: 8px; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; }',
+            '.nw-wifi-left { display: inline-flex; flex-wrap: wrap; align-items: center; justify-content: center; max-width: 100%; min-width: 0; }',
+            '.nw-wifi-badge { padding: 8px 10px; background: #ffffff; border-radius: 6px; font-size: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); white-space: nowrap; flex-shrink: 0; }',
+            '.nw-wifi-colon { font-size: 15.5px; opacity: 0.9; font-weight: 600; margin: 0 6px; flex-shrink: 0; }',
+            '.nw-wifi-name { font-size: 16.5px; letter-spacing: 0.5px; display: inline-flex; flex-wrap: wrap; justify-content: center; align-items: center; word-break: break-all; overflow-wrap: anywhere; white-space: normal; text-align: center; max-width: 100%; min-width: 0; }',
+            '.nw-wifi-pwd { color: #ffffff; font-size: 15px; font-weight: 600; white-space: normal; word-break: break-all; max-width: 100%; min-width: 0; }',
 
             '/* --- 11. Mobile Adaption --- */',
             '@media screen and (max-width: 768px) {',
@@ -418,7 +418,7 @@ return view.extend({
             '  .nw-form-area, .nw-confirm-board { width: 100% !important; max-width: 320px !important; margin: 0 auto !important; padding: 25px 20px !important; box-sizing: border-box !important; }',
             '  .nw-top-back { top: 12px; left: 12px; width: 32px; height: 32px; }',
             '  .nw-step-title { font-size: 18px; margin-top: 15px; margin-bottom: 20px; }',
-            '  .nw-current-mode-display { width: 100% !important; max-width: 320px !important; min-width: 0 !important; margin: 20px auto 0 !important; padding: 15px !important; box-sizing: border-box !important; display: block !important; }',
+            '  .nw-current-mode-display { width: 100% !important; max-width: 100% !important; min-width: 0 !important; margin: 20px auto 0 !important; padding: 15px !important; box-sizing: border-box !important; display: flex !important; flex-direction: column !important; align-items: center !important; }',
             '  .nw-actions { width: 100% !important; max-width: 320px !important; margin: 20px auto 0 !important; display: flex !important; flex-direction: row !important; gap: 12px !important; box-sizing: border-box !important; }',
             '  .nw-actions button { flex: 1 !important; padding: 12px 0 !important; font-size: 15px !important; margin: 0 !important; min-width: 0 !important; box-sizing: border-box !important; }',
             '  #nw-global-modal .nw-modal-box { padding: 25px 20px; width: 85%; box-sizing: border-box !important; }',
@@ -434,11 +434,14 @@ return view.extend({
             '  .nw-wiz-close-wrap { flex: 0 0 auto; order: 2; }',
             '  .nw-wiz-step-wrap { flex: 0 0 100%; justify-content: center; margin-top: 5px; order: 3; }',
             /* ===== 状态面板手机端换行与间距 ===== */
-            '  .nw-info-item { display: block; margin: 8px 0; text-align: center; }',
-            '  .nw-wifi-line { flex-direction: column; gap: 10px; margin-bottom: 7px; padding-bottom: 6px; border-bottom: 1px dashed rgba(255,255,255,0.2); }',
+            '  .nw-info-item { display: block; margin: 8px 0; text-align: center; max-width: 100%; min-width: 0; }',
+            '  .nw-wifi-line { flex-direction: column; gap: 10px; margin-bottom: 7px; padding-bottom: 6px; border-bottom: 1px dashed rgba(255,255,255,0.2); max-width: 100%; min-width: 0; }',
             '  .nw-wifi-line:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }',
-            '  .nw-wifi-left { flex-direction: column; gap: 8px; }',
+            '  .nw-wifi-left { flex-direction: column; gap: 8px; max-width: 100%; min-width: 0; }',
             '  .nw-wifi-colon { display: none; }',
+            '  .nw-hl { margin-left: 0 !important; max-width: 100%; min-width: 0; display: inline-block; word-break: break-all; white-space: normal; }',
+            '  .nw-wifi-name { flex-direction: column; gap: 6px; max-width: 100%; min-width: 0; }',
+            '  .nw-wifi-name span[title] { margin-left: 0 !important; }',
             '}',
             '</style>',
             
@@ -1690,7 +1693,7 @@ return view.extend({
                         staIfaces.forEach(function(i) {
                             var sName = escapeHTML(i.ssid);
                             var tLbl = "<b class='nw-wifi-badge' style='color:#10b981;'>" + T['TXT_WISP_ON'] + "</b>";
-                            wifiLines.push("<div class='nw-wifi-line'><span class='nw-wifi-left'>" + tLbl + "<span class='nw-wifi-colon'>:</span><span class='nw-hl nw-wifi-name'>" + sName + "</span></span></div>");
+                            wifiLines.push("<div class='nw-wifi-line'><span class='nw-wifi-left'>" + tLbl + "<span class='nw-wifi-colon'>:</span><span class='nw-hl nw-wifi-name'><span style='display:block; max-width:100%; word-break:break-all; white-space:normal; overflow-wrap:anywhere;'>" + sName + "</span></span></span></div>");
                         });
 
                         // 2. 判断 AP 是否应该合并为“多频合一”显示
@@ -1727,7 +1730,7 @@ return view.extend({
                                     roamBadge = "<span title='" + T['TXT_CLICK_GOTO'] + "' onclick=\"" + clickFn + "\" " + hoverStyle + " style='display:inline-block; white-space:nowrap; background:rgba(16, 185, 129, 0.2); color:#a7f3d0; border: 1px solid #10b981; font-size:11px; padding:2px 6px; border-radius:4px; margin-left:8px; vertical-align:text-bottom; font-family:sans-serif; cursor:pointer; transition:all 0.2s ease;'>" + T['TXT_ROAMING'] + "</span>";
                                 }
                             }
-                            wifiLines.push("<div class='nw-wifi-line'><span class='nw-wifi-left'>" + tLbl + "<span class='nw-wifi-colon'>:</span><span class='nw-hl nw-wifi-name'>" + sName + roamBadge + "</span></span><span class='nw-wifi-pwd'>(" + T['M_PWD'] + ": " + kTxt + ")</span></div>");
+                            wifiLines.push("<div class='nw-wifi-line'><span class='nw-wifi-left'>" + tLbl + "<span class='nw-wifi-colon'>:</span><span class='nw-hl nw-wifi-name'><span style='display:block; max-width:100%; word-break:break-all; white-space:normal; overflow-wrap:anywhere;'>" + sName + "</span>" + roamBadge + "</span></span><span class='nw-wifi-pwd'>(" + T['M_PWD'] + ": <span style='word-break:break-all; white-space:normal;'>" + kTxt + "</span>)</span></div>");
                         } else {
                             // 3. 渲染独立频段 UI
                             apIfaces.forEach(function(i) {
@@ -1762,19 +1765,19 @@ return view.extend({
                                     }
                                 }
                                 
-                                // 【修改点】：全部统一为 #10b981 绿字，并自动匹配“账号”词条
+                                // 独立频段
                                 var tLblNew = "<b class='nw-wifi-badge' style='color:#10b981;'>" + (bandStr === '5g' ? T['TXT_5G_ACCT'] : T['TXT_2G_ACCT']) + "</b>";
-                                wifiLines.push("<div class='nw-wifi-line'><span class='nw-wifi-left'>" + tLblNew + "<span class='nw-wifi-colon'>:</span><span class='nw-hl nw-wifi-name'>" + sName + roamBadge + "</span></span><span class='nw-wifi-pwd'>(" + T['M_PWD'] + ": " + kTxt + ")</span></div>");
+                                wifiLines.push("<div class='nw-wifi-line'><span class='nw-wifi-left'>" + tLblNew + "<span class='nw-wifi-colon'>:</span><span class='nw-hl nw-wifi-name'><span style='display:block; max-width:100%; word-break:break-all; white-space:normal; overflow-wrap:anywhere;'>" + sName + "</span>" + roamBadge + "</span></span><span class='nw-wifi-pwd'>(" + T['M_PWD'] + ": <span style='word-break:break-all; white-space:normal;'>" + kTxt + "</span>)</span></div>");
                             });
                         }
                     }
                     
-                    var ipv6Html = "<div style='font-size:15.5px; font-weight:bold; color:#ffffff; font-family:monospace; letter-spacing:0.5px; display:flex; flex-wrap:wrap; justify-content:center; align-items:center; line-height: 1.8; margin-top: 6px;'><span style='font-weight: 900; margin-right: 8px;'>IPv6 (DHCPv6): </span>" + ipv6Label + "</div>";
-                    var extraInfo = "<div style='margin-top: 16px; padding-top: 18px; border-top: 1px dashed rgba(255,255,255,0.6); font-size:15.5px; color:#ffffff; font-weight: 600; font-family:monospace; display:flex; flex-direction:column; gap:12px; align-items:center;'>";
+                    var ipv6Html = "<div style='font-size:15.5px; font-weight:bold; color:#ffffff; font-family:monospace; letter-spacing:0.5px; display:flex; flex-wrap:wrap; justify-content:center; align-items:center; line-height: 1.8; margin-top: 6px; max-width:100%; min-width:0; word-break:break-all;'><span style='font-weight: 900; margin-right: 8px; flex-shrink:0;'>IPv6 (DHCPv6): </span>" + ipv6Label + "</div>";
+                    var extraInfo = "<div style='margin-top: 16px; padding-top: 18px; border-top: 1px dashed rgba(255,255,255,0.6); font-size:15.5px; color:#ffffff; font-weight: 600; font-family:monospace; display:flex; flex-direction:column; gap:12px; align-items:center; max-width:100%; min-width:0; width:100%; box-sizing:border-box;'>";
                     extraInfo += wifiLines.join('');
                     extraInfo += "</div>";
 
-                    if (modeTextEl) modeTextEl.innerHTML = "<div style='font-size:17px; font-weight:600; margin-bottom:12px; color:#ffffff; font-family: monospace; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px;'><span style='white-space:nowrap;'>" + sTitle + "</span>" + statusBadge + "</div>" + "<div style='font-size:15.5px; font-weight:bold; color:#ffffff; font-family:monospace; letter-spacing:0.5px; display:flex; flex-wrap:wrap; justify-content:center; line-height: 1.8;'>" + sDetails + "</div>" + ipv6Html + extraInfo;
+                    if (modeTextEl) modeTextEl.innerHTML = "<div style='font-size:17px; font-weight:600; margin-bottom:12px; color:#ffffff; font-family: monospace; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; max-width:100%; min-width:0;'><span style='white-space:nowrap; max-width:100%; min-width:0; overflow:hidden; text-overflow:ellipsis;'>" + sTitle + "</span>" + statusBadge + "</div>" + "<div style='font-size:15.5px; font-weight:bold; color:#ffffff; font-family:monospace; letter-spacing:0.5px; display:flex; flex-wrap:wrap; justify-content:center; line-height: 1.8; max-width:100%; min-width:0;'>" + sDetails + "</div>" + ipv6Html + extraInfo;
 
                 }).catch(function() {});
             } catch(e) {}
