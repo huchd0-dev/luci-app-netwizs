@@ -1777,7 +1777,7 @@ return view.extend({
                     extraInfo += wifiLines.join('');
                     extraInfo += "</div>";
 
-                    if (modeTextEl) modeTextEl.innerHTML = "<div style='font-size:17px; font-weight:600; margin-bottom:12px; color:#ffffff; font-family: monospace; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; max-width:100%; min-width:0;'><span style='white-space:nowrap; max-width:100%; min-width:0; overflow:hidden; text-overflow:ellipsis;'>" + sTitle + "</span>" + statusBadge + "</div>" + "<div style='font-size:15.5px; font-weight:bold; color:#ffffff; font-family:monospace; letter-spacing:0.5px; display:flex; flex-wrap:wrap; justify-content:center; line-height: 1.8; max-width:100%; min-width:0;'>" + sDetails + "</div>" + ipv6Html + extraInfo;
+                    if (modeTextEl) modeTextEl.innerHTML = "<div style='font-size:17px; font-weight:600; margin-bottom:8px; color:#ffffff; font-family: monospace; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; max-width:100%; min-width:0;'><span style='white-space:nowrap; max-width:100%; min-width:0; overflow:hidden; text-overflow:ellipsis;'>" + sTitle + "</span>" + statusBadge + "</div>" + "<div style='font-size:15.5px; font-weight:bold; color:#ffffff; font-family:monospace; letter-spacing:0.5px; display:flex; flex-wrap:wrap; justify-content:center; line-height: 1.3; max-width:100%; min-width:0;'>" + sDetails + "</div>" + ipv6Html + extraInfo;
 
                 }).catch(function() {});
             } catch(e) {}
