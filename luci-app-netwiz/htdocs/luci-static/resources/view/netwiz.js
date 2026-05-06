@@ -1773,12 +1773,21 @@ return view.extend({
                     }
                     
                     var ipv6Html = "<div style='font-size:15.5px; font-weight:bold; color:#ffffff; font-family:monospace; letter-spacing:0.5px; display:flex; flex-wrap:wrap; justify-content:center; align-items:center; line-height: 1.8; margin-top: 6px; max-width:100%; min-width:0; word-break:break-all;'><span style='font-weight: 900; margin-right: 8px; flex-shrink:0;'>IPv6 (DHCPv6): </span>" + ipv6Label + "</div>";
+                    
+                    // 跳转到新网络管家按钮
+                    var devMgrBtn = "";
+                    if (!isBypass) {
+                         // AP 模式下不分配 IP，所以只有主/二级路由模式下才显示设备管理
+                         var devUrl = window.location.pathname.replace('/netwiz', '/netwiz_dev');
+                         devMgrBtn = "<div style='margin-top: 20px; width: 100%;'><a href='" + devUrl + "' style='display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.4); border-radius: 8px; color: #fff; text-decoration: none; font-weight: bold; transition: all 0.25s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.1);' onmouseover=\"this.style.background='rgba(255,255,255,0.3)'; this.style.transform='translateY(-2px)';\" onmouseout=\"this.style.background='rgba(255,255,255,0.2)'; this.style.transform='none';\"><svg style='width: 18px; height: 18px;' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='2' y='3' width='20' height='14' rx='2' ry='2'></rect><line x1='8' y1='21' x2='16' y2='21'></line><line x1='12' y1='17' x2='12' y2='21'></line></svg> 终端设备与 IP 绑定</a></div>";
+                    }
+
                     var extraInfo = "<div style='margin-top: 16px; padding-top: 18px; border-top: 1px dashed rgba(255,255,255,0.6); font-size:15.5px; color:#ffffff; font-weight: 600; font-family:monospace; display:flex; flex-direction:column; gap:5px; align-items:center; max-width:100%; min-width:0; width:100%; box-sizing:border-box;'>";
                     extraInfo += wifiLines.join('');
                     extraInfo += "</div>";
 
-                    if (modeTextEl) modeTextEl.innerHTML = "<div style='font-size:17px; font-weight:600; margin-bottom:8px; color:#ffffff; font-family: monospace; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; max-width:100%; min-width:0;'><span style='white-space:nowrap; max-width:100%; min-width:0; overflow:hidden; text-overflow:ellipsis;'>" + sTitle + "</span>" + statusBadge + "</div>" + "<div style='font-size:15.5px; font-weight:bold; color:#ffffff; font-family:monospace; letter-spacing:0.5px; display:flex; flex-wrap:wrap; justify-content:center; line-height: 1.3; max-width:100%; min-width:0;'>" + sDetails + "</div>" + ipv6Html + extraInfo;
-
+                    if (modeTextEl) modeTextEl.innerHTML = "<div style='font-size:17px; font-weight:600; margin-bottom:8px; color:#ffffff; font-family: monospace; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; max-width:100%; min-width:0;'><span style='white-space:nowrap; max-width:100%; min-width:0; overflow:hidden; text-overflow:ellipsis;'>" + sTitle + "</span>" + statusBadge + "</div>" + "<div style='font-size:15.5px; font-weight:bold; color:#ffffff; font-family:monospace; letter-spacing:0.5px; display:flex; flex-wrap:wrap; justify-content:center; line-height: 1.3; max-width:100%; min-width:0;'>" + sDetails + "</div>" + ipv6Html + devMgrBtn + extraInfo;
+                    
                 }).catch(function() {});
             } catch(e) {}
         }
