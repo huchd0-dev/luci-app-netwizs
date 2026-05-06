@@ -79,8 +79,8 @@ return view.extend({
             '  .nd-info, .nd-ip-wrap, .nd-actions { width: 100%; min-width: 0; }',
             '  .nd-actions { justify-content: flex-start; flex-wrap: wrap; margin-top: 5px; }',
             '  .nd-btn { flex: 1; text-align: center; }',
-            '}'
-            ].join('\n') + '</style>',
+            '}',
+            '</style>',
 
             '<div class="nd-header">',
             '   <div class="nd-back-btn" id="dev-back" title="返回主界面">',
