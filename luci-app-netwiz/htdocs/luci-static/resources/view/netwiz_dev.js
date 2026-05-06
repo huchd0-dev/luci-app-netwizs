@@ -7,8 +7,10 @@
 'require dom';
 'require rpc';
 
-// 调用后端的获取列表接口
+// 调用后端的接口
 var callDeviceList = rpc.declare({ object: 'netwiz_dev', method: 'get_list', expect: { devices: [] } });
+var callDeviceBind = rpc.declare({ object: 'netwiz_dev', method: 'bind', params: ['mac', 'ip', 'name'], expect: { result: 0 } });
+var callDeviceUnbind = rpc.declare({ object: 'netwiz_dev', method: 'unbind', params: ['mac'], expect: { result: 0 } });
 
 return view.extend({
     // 屏蔽默认的保存和重置按钮
@@ -183,21 +185,63 @@ return view.extend({
 
                 listEl.innerHTML = html;
                 
-                // 绑定点击事件 (预留接线端子)
+                // 绑定真实点击事件
                 container.querySelectorAll('.btn-bind').forEach(function(btn) {
                     btn.addEventListener('click', function() {
-                        alert("一键固定功能就绪！即将调用后端绑定：\nMAC: " + this.getAttribute('data-mac') + "\nIP: " + this.getAttribute('data-ip'));
+                        var mac = this.getAttribute('data-mac');
+                        var ip = this.getAttribute('data-ip');
+                        var name = this.getAttribute('data-name');
+                        
+                        this.innerHTML = '<div class="nd-spinner" style="width:16px;height:16px;border-width:2px;border-top-color:#fff;"></div> 处理中';
+                        this.disabled = true;
+                        
+                        // 调用后端的绑定接口
+                        callDeviceBind(mac, ip, name).then(function() {
+                            loadDevices(); // 绑定成功，无感刷新列表
+                        }).catch(function(e) {
+                            alert("固定失败，请检查网络: " + e);
+                            loadDevices();
+                        });
                     });
                 });
+
                 container.querySelectorAll('.btn-edit').forEach(function(btn) {
                     btn.addEventListener('click', function() {
-                        alert("修改功能就绪！目标 MAC: " + this.getAttribute('data-mac'));
+                        var mac = this.getAttribute('data-mac');
+                        var name = this.getAttribute('data-name');
+                        var currentIp = this.getAttribute('data-ip');
+                        
+                        // 弹出一个系统极简输入框让用户修改 IP
+                        var newIp = window.prompt("请输入您要为该设备指定的新静态 IP 地址：", currentIp);
+                        
+                        // 用户点击了取消，或者输入为空、未修改，则不操作
+                        if (newIp === null || newIp.trim() === "" || newIp.trim() === currentIp) return;
+                        
+                        this.innerHTML = "修改中...";
+                        this.disabled = true;
+                        
+                        callDeviceBind(mac, newIp.trim(), name).then(function() {
+                            loadDevices();
+                        }).catch(function(e) {
+                            alert("IP 格式有误或保存失败: " + e);
+                            loadDevices();
+                        });
                     });
                 });
+
                 container.querySelectorAll('.btn-unbind').forEach(function(btn) {
                     btn.addEventListener('click', function() {
-                        if(confirm("确定要解除对该设备的 IP 绑定吗？")) {
-                            alert("解绑功能就绪！目标 MAC: " + this.getAttribute('data-mac'));
+                        if(confirm("解除后，该设备将会在租期到期后重新获取随机 IP。\n\n确定要解除静态 IP 绑定吗？")) {
+                            var mac = this.getAttribute('data-mac');
+                            this.innerHTML = "解绑中...";
+                            this.disabled = true;
+                            
+                            callDeviceUnbind(mac).then(function() {
+                                loadDevices();
+                            }).catch(function(e) {
+                                alert("解除失败: " + e);
+                                loadDevices();
+                            });
                         }
                     });
                 });
