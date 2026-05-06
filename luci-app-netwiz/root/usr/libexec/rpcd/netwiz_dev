@@ -1,0 +1,82 @@
+#!/bin/sh
+# Copyright (C) 2026 huchd0
+
+case "$1" in
+    list)
+        echo '{ "get_list": {}, "bind": { "mac": "string", "ip": "string", "name": "string" }, "unbind": { "mac": "string" } }'
+        exit 0
+        ;;
+    call)
+        case "$2" in
+            get_list)
+                # 1. 抓取无线设备 MAC (物理网卡绝对在线)
+                wifi_macs=$(for iface in $(iwinfo 2>/dev/null | grep "^wlan\|^ra\|^wl\|^ath" | awk '{print $1}'); do iwinfo $iface assoclist 2>/dev/null | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}' | tr 'A-Z' 'a-z'; done)
+                
+                # 2. 抓取邻居表 (含动态物理状态)
+                ip_neigh=$(ip neigh show dev br-lan 2>/dev/null)
+                
+                # 3. 抓取 DHCP 租约记录
+                leases=$(cat /tmp/dhcp.leases 2>/dev/null)
+                
+                # 4. 抓取当前静态绑定
+                uci_hosts=$(uci show dhcp 2>/dev/null | grep -E "^dhcp\.@host\[[0-9]+\]\.(mac|ip|name)=")
+                
+                # 5. AWK 极速融合解析 (三维探针)
+                json_data=$(awk -v wifi_str="$wifi_macs" -v neigh_str="$ip_neigh" -v lease_str="$leases" -v uci_str="$uci_hosts" '
+                BEGIN {
+                    # 解析 WiFi 绝对在线 MAC
+                    split(wifi_str, warr, " "); for(i in warr) wifi_online[warr[i]]=1;
+                    
+                    # 解析 DHCP 租约
+                    split(lease_str, larr, "\n"); for(i in larr) { split(larr[i], f, " "); if(f[2]!=""){ mac=tolower(f[2]); leases_ip[mac]=f[3]; if(f[4]!="*") leases_name[mac]=f[4]; } }
+                    
+                    # 解析 UCI 静态绑定
+                    split(uci_str, uarr, "\n"); for(i in uarr) {
+                        idx=index(uarr[i],"="); if(idx>0){
+                            key=substr(uarr[i],1,idx-1); val=substr(uarr[i],idx+1); gsub(/^\047|\047$/, "", val);
+                            split(key, kp, ".");
+                            if(kp[1]=="dhcp" && kp[2]!="" && kp[3]!=""){
+                                h_idx=kp[2]; prop=kp[3];
+                                if(prop=="mac"){ split(tolower(val), mparts, " "); for(m in mparts) mac_to_idx[mparts[m]]=h_idx; }
+                                else if(prop=="ip") static_ip[h_idx]=val;
+                                else if(prop=="name") static_name[h_idx]=val;
+                            }
+                        }
+                    }
+                    
+                    # 解析 IP Neigh 邻居表
+                    split(neigh_str, narr, "\n"); for(i in narr) { split(narr[i], f, " "); if(f[1]!="" && f[5]!=""){ mac=tolower(f[5]); neigh_ip[mac]=f[1]; neigh_state[mac]=f[6]; all_macs[mac]=1; } }
+                    
+                    for(m in leases_ip) all_macs[m]=1; for(m in mac_to_idx) all_macs[m]=1;
+
+                    # 生成 JSON 输出
+                    printf "{\"devices\": ["; first=1;
+                    for(mac in all_macs) {
+                        is_wifi=(wifi_online[mac]==1); n_state=neigh_state[mac];
+                        is_online=0; if(is_wifi || n_state=="REACHABLE" || n_state=="DELAY" || n_state=="PROBE") is_online=1;
+                        h_idx=mac_to_idx[mac]; ip=neigh_ip[mac]; if(ip=="") ip=static_ip[h_idx]; if(ip=="") ip=leases_ip[mac];
+                        if(ip=="" && is_online==0) continue;
+                        name=static_name[h_idx]; if(name=="") name=leases_name[mac]; if(name=="") name="Unknown";
+                        gsub(/"/, "\\\"", name);
+                        is_static=(h_idx!="")?"true":"false";
+                        if(!first) printf ", ";
+                        printf "{\"mac\": \"%s\", \"ip\": \"%s\", \"name\": \"%s\", \"online\": %s, \"is_static\": %s}", mac, ip, name, (is_online?"true":"false"), is_static;
+                        first=0;
+                    }
+                    printf "]}";
+                }')
+                echo "$json_data"
+                exit 0
+                ;;
+            bind)
+                # === 预留的一键绑定逻辑，下一步补全安全写入 ===
+                exit 0
+                ;;
+            unbind)
+                # === 预留的解绑逻辑，下一步补全 ===
+                exit 0
+                ;;
+        esac
+        ;;
+esac
+exit 1
