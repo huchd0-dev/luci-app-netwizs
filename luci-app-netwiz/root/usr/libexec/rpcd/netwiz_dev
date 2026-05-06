@@ -7,46 +7,169 @@ case "$1" in
         exit 0
         ;;
     call)
-        # 获取前端传来的 JSON 参数
-        input=$(cat)
-        
         case "$2" in
             get_list)
-                wifi_macs=$(for iface in $(iwinfo 2>/dev/null | grep "^wlan\|^ra\|^wl\|^ath" | awk '{print $1}'); do iwinfo $iface assoclist 2>/dev/null | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}' | tr 'A-Z' 'a-z'; done)
-                ip_neigh=$(ip neigh show dev br-lan 2>/dev/null)
-                leases=$(cat /tmp/dhcp.leases 2>/dev/null)
-                uci_hosts=$(uci show dhcp 2>/dev/null | grep -E "^dhcp\.@host\[[0-9]+\]\.(mac|ip|name)=")
-                
-                json_data=$(awk -v wifi_str="$wifi_macs" -v neigh_str="$ip_neigh" -v lease_str="$leases" -v uci_str="$uci_hosts" '
+                wifi_macs=$(iwinfo 2>/dev/null | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}' | tr 'A-Z' 'a-z' || true)
+                arp_cache=$(ip -4 neigh show 2>/dev/null || cat /proc/net/arp 2>/dev/null | tail -n +2 || true)
+                leases=$(cat /tmp/dhcp.leases /var/dhcp.leases /tmp/run/dnsmasq/dhcp.leases /var/lib/misc/dnsmasq.leases 2>/dev/null || true)
+                hosts_str=$(cat /tmp/hosts/* /etc/hosts 2>/dev/null || true)
+                uci_hosts=$(uci show dhcp 2>/dev/null | grep "\.@host\[" || true)
+
+                # ★ 核心修复：直接拿完整多行 ubus JSON，不使用 grep 破坏结构
+                ubus_leases=$(ubus call dhcp ipv4leases 2>/dev/null || ubus call odhcpd ipv4leases 2>/dev/null || true)
+
+                # ★ 严格提取网关与本机IP（彻底剔除 /24 子网掩码和换行符）
+                gw_ip=$(ip -4 route show default 2>/dev/null | awk '/default/ {print $3}' | head -n1 | tr -d ' \r\n')
+                lan_ip=$(ip addr show br-lan 2>/dev/null | awk '/inet / {print $2}' | cut -d/ -f1 | head -n1 | tr -d ' \r\n')
+                [ -z "$lan_ip" ] && lan_ip=$(uci -q get network.lan.ipaddr | cut -d/ -f1 | tr -d ' \r\n')
+
+                # ★ 获取精确的当前 Unix 时间戳，绕过 Busybox awk 不支持 systime() 的限制
+                curr_time=$(date +%s)
+
+                json_data=$(awk -v current_time="$curr_time" -v wifi_str="$wifi_macs" -v arp_str="$arp_cache" -v lease_str="$leases" -v hosts_str="$hosts_str" -v ubus_str="$ubus_leases" -v uci_str="$uci_hosts" -v gw_ip="$gw_ip" -v lan_ip="$lan_ip" '
                 BEGIN {
-                    split(wifi_str, warr, " "); for(i in warr) wifi_online[warr[i]]=1;
-                    split(lease_str, larr, "\n"); for(i in larr) { split(larr[i], f, " "); if(f[2]!=""){ mac=tolower(f[2]); leases_ip[mac]=f[3]; if(f[4]!="*") leases_name[mac]=f[4]; } }
-                    split(uci_str, uarr, "\n"); for(i in uarr) {
-                        idx=index(uarr[i],"="); if(idx>0){
-                            key=substr(uarr[i],1,idx-1); val=substr(uarr[i],idx+1); gsub(/^\047|\047$/, "", val);
-                            split(key, kp, ".");
-                            if(kp[1]=="dhcp" && kp[2]!="" && kp[3]!=""){
-                                h_idx=kp[2]; prop=kp[3];
-                                if(prop=="mac"){ split(tolower(val), mparts, " "); for(m in mparts) mac_to_idx[mparts[m]]=h_idx; }
-                                else if(prop=="ip") static_ip[h_idx]=val;
-                                else if(prop=="name") static_name[h_idx]=val;
+                    gsub(/^[ \t\r\n]+|[ \t\r\n]+$/, "", gw_ip);
+                    gsub(/^[ \t\r\n]+|[ \t\r\n]+$/, "", lan_ip);
+
+                    split(wifi_str, warr, "\n"); for(i in warr) if(warr[i]!="") wifi_online[warr[i]]=1;
+                    
+                    split(arp_str, aarr, "\n");
+                    for(i in aarr) {
+                        split(aarr[i], f, " ");
+                        if(f[1]!="" && f[1]!~/dev/) {
+                            mac=""; state="";
+                            for(j=1; j<=length(f); j++) {
+                                if(f[j]=="lladdr") mac=tolower(f[j+1]);
+                                else if(f[j] ~ /^([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}$/) mac=tolower(f[j]);
+                                if(j==length(f)) state=f[j];
+                            }
+                            if(mac!="" && mac!="00:00:00:00:00:00") {
+                                arp_ip[mac]=f[1];
+                                if(state ~ /REACHABLE|DELAY|PROBE|0x2/) arp_online[mac]=1;
+                                all_macs[mac]=1;
                             }
                         }
                     }
-                    split(neigh_str, narr, "\n"); for(i in narr) { split(narr[i], f, " "); if(f[1]!="" && f[5]!=""){ mac=tolower(f[5]); neigh_ip[mac]=f[1]; neigh_state[mac]=f[6]; all_macs[mac]=1; } }
-                    for(m in leases_ip) all_macs[m]=1; for(m in mac_to_idx) all_macs[m]=1;
+
+                    # ★ 暴力解构多行 UBUS JSON (完美解析带空格名字与租约剩余时间)
+                    split(ubus_str, ulines, "\n");
+                    cur_mac = ""; cur_ip = ""; cur_name = ""; cur_valid = -1;
+                    for(i=1; i<=length(ulines); i++) {
+                        line = ulines[i];
+                        if (line ~ /"mac":/) { split(line, p, "\""); cur_mac = tolower(p[4]); }
+                        else if (line ~ /"ip":/) { split(line, p, "\""); cur_ip = p[4]; }
+                        else if (line ~ /"hostname":/) { split(line, p, "\""); cur_name = p[4]; }
+                        else if (line ~ /"valid":/) { split(line, p, ":"); val=p[2]; gsub(/[^0-9]/, "", val); cur_valid = val + 0; }
+                        else if (line ~ /}/) {
+                            if (cur_mac != "") {
+                                if (cur_ip != "") leases_ip[cur_mac] = cur_ip;
+                                if (cur_name != "") ubus_name[cur_mac] = cur_name;
+                                if (cur_valid > 0) {
+                                    h = int(cur_valid / 3600); m = int((cur_valid % 3600) / 60); s = cur_valid % 60;
+                                    leases_time[cur_mac] = sprintf("%dh %dm %ds", h, m, s);
+                                }
+                                all_macs[cur_mac] = 1;
+                            }
+                            cur_mac = ""; cur_ip = ""; cur_name = ""; cur_valid = -1;
+                        }
+                    }
+
+                    # 解析传统租约文件
+                    split(lease_str, larr, "\n");
+                    for(i in larr) {
+                        split(larr[i], f, " ");
+                        if(length(f) >= 4 && f[2]!="") { 
+                            mac=tolower(f[2]); 
+                            if(f[3]!="") leases_ip[mac]=f[3]; 
+                            
+                            # 提取可能带有空格的名字
+                            name = f[4];
+                            for(k=5; k<=length(f)-1; k++) { name = name " " f[k]; }
+                            if(name!="" && name!="*") leases_name[mac]=name; 
+                            all_macs[mac]=1; 
+                            
+                            # 传统文件的租约时间计算
+                            exp_time = f[1] + 0;
+                            if (leases_time[mac] == "") {
+                                if (exp_time > current_time) {
+                                    left = exp_time - current_time;
+                                    h = int(left / 3600); m = int((left % 3600) / 60); s = left % 60;
+                                    leases_time[mac] = sprintf("%dh %dm %ds", h, m, s);
+                                } else if (exp_time == 0) {
+                                    leases_time[mac] = "永久 (Infinite)";
+                                }
+                            }
+                        }
+                    }
+
+                    split(hosts_str, harr, "\n");
+                    for(i in harr) {
+                        split(harr[i], f, " ");
+                        if(f[1]!="" && f[2]!="") {
+                            if (f[1] ~ /^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$/) {
+                                name = f[2]; sub(/\.lan$/, "", name);
+                                if (name != "localhost" && name != "*") ip_to_name[f[1]] = name;
+                            }
+                        }
+                    }
+
+                    split(uci_str, uarr, "\n");
+                    for(i in uarr) {
+                        idx=index(uarr[i],"="); if(idx>0) {
+                            key=substr(uarr[i],1,idx-1); val=substr(uarr[i],idx+1); gsub(/^\047|\047$/, "", val);
+                            split(key, kp, ".");
+                            if(kp[1]=="dhcp" && kp[2]!="" && kp[3]!="") {
+                                h_idx=kp[2]; prop=kp[3];
+                                if(prop=="mac"){
+                                    gsub(/["\r\n]/, "", val);
+                                    split(tolower(val), mparts, " "); 
+                                    for(m in mparts) { uci_mac_list[h_idx] = (uci_mac_list[h_idx]=="" ? "" : uci_mac_list[h_idx] " ") mparts[m]; }
+                                }
+                                else if(prop=="ip") uci_ip_map[h_idx]=val;
+                                else if(prop=="name") uci_name_map[h_idx]=val;
+                            }
+                        }
+                    }
+
+                    for (h_idx in uci_mac_list) {
+                        split(uci_mac_list[h_idx], mparts, " ");
+                        for (m in mparts) {
+                            m_mac = mparts[m];
+                            all_macs[m_mac] = 1;
+                            is_static_mac[m_mac] = 1;
+                            if (uci_ip_map[h_idx] != "") static_ip[m_mac] = uci_ip_map[h_idx];
+                            if (uci_name_map[h_idx] != "") uci_name[m_mac] = uci_name_map[h_idx];
+                        }
+                    }
 
                     printf "{\"devices\": ["; first=1;
                     for(mac in all_macs) {
-                        is_wifi=(wifi_online[mac]==1); n_state=neigh_state[mac];
-                        is_online=0; if(is_wifi || n_state=="REACHABLE" || n_state=="DELAY" || n_state=="PROBE") is_online=1;
-                        h_idx=mac_to_idx[mac]; ip=neigh_ip[mac]; if(ip=="") ip=static_ip[h_idx]; if(ip=="") ip=leases_ip[mac];
+                        is_online = (arp_online[mac]==1 || wifi_online[mac]==1) ? 1 : 0;
+                        ip = arp_ip[mac]; 
+                        if(ip=="") ip = static_ip[mac]; 
+                        if(ip=="") ip = leases_ip[mac];
+                        
+                        gsub(/^[ \t\r\n]+|[ \t\r\n]+$/, "", ip);
                         if(ip=="" && is_online==0) continue;
-                        name=static_name[h_idx]; if(name=="") name=leases_name[mac]; if(name=="") name="Unknown";
-                        gsub(/"/, "\\\"", name);
-                        is_static=(h_idx!="")?"true":"false";
+                        if(ip=="") ip = "未知 IP";
+                        
+                        name = uci_name[mac];
+                        if(name=="") name = ip_to_name[ip];
+                        if(name=="") name = ubus_name[mac];
+                        if(name=="") name = leases_name[mac]; 
+                        if(name=="") name = "Unknown";
+                        
+                        l_time = leases_time[mac];
+                        if(l_time=="") l_time = "-";
+                        
+                        gsub(/["\\\r\n\t]/, "", mac); gsub(/["\\\r\n\t]/, "", ip); gsub(/["\\\r\n\t]/, "", name);
+                        
+                        is_static = (is_static_mac[mac]==1) ? "true" : "false";
+                        is_gw = (ip != "" && ip == gw_ip) ? "true" : "false";
+                        is_local = (ip != "" && ip == lan_ip) ? "true" : "false";
+                        
                         if(!first) printf ", ";
-                        printf "{\"mac\": \"%s\", \"ip\": \"%s\", \"name\": \"%s\", \"online\": %s, \"is_static\": %s}", mac, ip, name, (is_online?"true":"false"), is_static;
+                        printf "{\"mac\": \"%s\", \"ip\": \"%s\", \"name\": \"%s\", \"online\": %s, \"is_static\": %s, \"is_gw\": %s, \"is_local\": %s, \"lease\": \"%s\"}", mac, ip, name, (is_online?"true":"false"), is_static, is_gw, is_local, l_time;
                         first=0;
                     }
                     printf "]}";
@@ -54,70 +177,37 @@ case "$1" in
                 echo "$json_data"
                 exit 0
                 ;;
-                
             bind)
-                # 解析前端传来的真实参数
+                input=$(cat)
                 mac=$(echo "$input" | jsonfilter -e '@.mac' | tr 'A-Z' 'a-z')
                 ip=$(echo "$input" | jsonfilter -e '@.ip')
                 name=$(echo "$input" | jsonfilter -e '@.name')
+
+                [ -z "$mac" ] || [ -z "$ip" ] && exit 0
+                [ -z "$name" ] || [ "$name" = "Unknown" ] && name="Device_${mac: -5}"
+
+                uci show dhcp | grep -i "\.mac=.*$mac" | cut -d'.' -f2 | while read -r h_idx; do uci delete dhcp.$h_idx 2>/dev/null; done
+                uci show dhcp | grep "\.ip='$ip'" | cut -d'.' -f2 | while read -r h_idx; do uci delete dhcp.$h_idx 2>/dev/null; done
                 
-                # IP 格式非法
-                if ! echo "$ip" | awk -F. 'NF==4 && $1>=0 && $1<=255 && $2>=0 && $2<=255 && $3>=0 && $3<=255 && $4>=0 && $4<=255 {print "ok"}' | grep -q "ok"; then
-                    echo '{"result":1, "error":"Invalid IP Format"}'
-                    exit 1
-                fi
+                new_sect=$(uci add dhcp host)
+                uci set dhcp.$new_sect.name="$name"
+                uci set dhcp.$new_sect.mac="$mac"
+                uci set dhcp.$new_sect.ip="$ip"
                 
-                # 动态防冲撞清理，删除被占用相同 IP 或相同 MAC 的旧静态规则
-                count=$(uci show dhcp | grep -c "=host" || echo 0)
-                idx=0
-                while [ $idx -lt $count ]; do
-                    exist_mac=$(uci -q get dhcp.@host[$idx].mac | tr 'A-Z' 'a-z' || true)
-                    exist_ip=$(uci -q get dhcp.@host[$idx].ip || true)
-                    
-                    if echo " $exist_mac " | grep -q -i " $mac " || [ "$exist_ip" = "$ip" ]; then
-                        uci delete dhcp.@host[$idx]
-                        count=$((count - 1)) # 删除后数组塌陷，当前索引变成下一个，无需 idx+1
-                    else
-                        idx=$((idx + 1))
-                    fi
-                done
-                
-                # 写入新规则
-                uci add dhcp host >/dev/null
-                uci set dhcp.@host[-1].mac="$mac"
-                uci set dhcp.@host[-1].ip="$ip"
-                [ -n "$name" ] && [ "$name" != "Unknown" ] && uci set dhcp.@host[-1].name="$name"
-                
-                # 保存并使用 reload
                 uci commit dhcp
                 /etc/init.d/dnsmasq reload >/dev/null 2>&1
-                
                 echo '{"result":0}'
                 exit 0
                 ;;
-                
             unbind)
+                input=$(cat)
                 mac=$(echo "$input" | jsonfilter -e '@.mac' | tr 'A-Z' 'a-z')
-                deleted=0
+                [ -z "$mac" ] && exit 0
                 
-                count=$(uci show dhcp | grep -c "=host" || echo 0)
-                idx=0
-                while [ $idx -lt $count ]; do
-                    exist_mac=$(uci -q get dhcp.@host[$idx].mac | tr 'A-Z' 'a-z' || true)
-                    if echo " $exist_mac " | grep -q -i " $mac "; then
-                        uci delete dhcp.@host[$idx]
-                        count=$((count - 1))
-                        deleted=1
-                    else
-                        idx=$((idx + 1))
-                    fi
-                done
+                uci show dhcp | grep -i "\.mac=.*$mac" | cut -d'.' -f2 | while read -r h_idx; do uci delete dhcp.$h_idx 2>/dev/null; done
                 
-                if [ "$deleted" = "1" ]; then
-                    uci commit dhcp
-                    /etc/init.d/dnsmasq reload >/dev/null 2>&1
-                fi
-                
+                uci commit dhcp
+                /etc/init.d/dnsmasq reload >/dev/null 2>&1
                 echo '{"result":0}'
                 exit 0
                 ;;
