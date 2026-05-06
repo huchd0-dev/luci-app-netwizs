@@ -27,7 +27,7 @@ DOWNLOAD_SUCCESS=0
 for FILE in $FILES; do
     # 完美匹配您的文件名格式：前缀_包名.后缀 (例如 apk_luci-app-netwiz.apk)
     TARGET_FILE="${PKG_TYPE}_${FILE}.${PKG_TYPE}"
-    URL_DIRECT="https://github.com/huchd0/luci-app-netwiz/releases/latest/download/${TARGET_FILE}"
+    URL_DIRECT="https://github.com/sdxmhs/luci-app-netwiz/releases/latest/download/${TARGET_FILE}"
     
     # 🌟 代理池：引入目前国内最稳定的三个加速节点，防止单一节点失效
     PROXY_1="https://ghp.ci/${URL_DIRECT}"
