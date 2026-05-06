@@ -11,7 +11,6 @@
 		}
 	},
 	"admin/netwiz_dev": {
-		"title": "Device Manager",
 		"action": {
 			"type": "view",
 			"path": "netwiz_dev"
