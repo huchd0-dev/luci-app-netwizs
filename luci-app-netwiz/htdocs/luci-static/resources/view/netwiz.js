@@ -228,15 +228,12 @@ return view.extend({
         var container = dom.create('div', { id: 'netwiz-container' });
 
         var htmlTemplate = [
+            '<link rel="stylesheet" type="text/css" href="' + L.resource('view/netwiz.css') + '?v=' + Date.now() + '">',
+            
             '<style>',
-            '/* ====== Netwiz Elegant UI Styles ====== */',
-            '/* --- 1. Base & Layout --- */',
-            ' header { margin: -5px -5px 0; }',
-            '#maincontent, .main-right { overflow-y: auto !important; overflow-x: hidden !important; }', 
-            '#netwiz-container { display: block !important; width: 100% !important; min-height: 101vh !important; padding: 0 !important; margin: 0 auto !important; box-sizing: border-box !important; color: #64748b; font-size: 14px;}',
-            '.nw-wrapper { display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: flex-start !important; width: 100% !important; max-width: 900px !important; margin: 0 auto !important; padding-bottom: 10vh; font-family: -apple-system, BlinkMacSystemFont, sans-serif; box-sizing: border-box !important; }',
-            '.nw-header { display: block !important; width: 100% !important; max-width: 750px !important; margin: 0 auto 30px auto !important; text-align: center; background-color: #5e72e4; padding: 15px; border-radius: 16px; position: relative; box-sizing: border-box; box-shadow: 0 10px 25px rgba(94, 114, 228, 0.15); z-index: 20; }',
             '.nw-step { width: 100% !important; max-width: 800px !important; text-align: center; animation: slideUp 0.4s ease-out; margin: 0 auto !important; }',
+            '.nw-form-area, .nw-confirm-board { position: relative; max-width: 460px; margin: 0 auto; text-align: left; padding: 40px; border-radius: 16px; background-color: rgba(255, 255, 255, 0.88); box-shadow: 0 10px 30px rgba(0,0,0,0.06); box-sizing: border-box; display: block !important; overflow: hidden; word-break: break-word; }',
+            '.nw-setting-row, .nw-setting-row-alt, .nw-switch-row-padded, .nw-adv-setting-row, .nw-roam-row, .nw-roam-row-alt, .nw-split-header-row, .nw-legacy-row, .nw-wisp-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }',
             '.nw-form-area, .nw-confirm-board { position: relative; max-width: 460px; margin: 0 auto; text-align: left; padding: 40px; border-radius: 16px; background-color: rgba(255, 255, 255, 0.88); box-shadow: 0 10px 30px rgba(0,0,0,0.06); box-sizing: border-box; display: block !important; overflow: hidden; word-break: break-word; }',
 
             '/* --- 2. Shared Flex Rows --- */',
