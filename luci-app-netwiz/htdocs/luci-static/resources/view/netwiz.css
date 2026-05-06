@@ -1,26 +1,29 @@
 /* =========================================================
-   Netwiz 全局共享基础样式
+   Netwiz 全局共享基础样式 (主向导与设备管家共用)
 ========================================================= */
-header { margin: -5px -5px 0 !important; }
-#maincontent, .main-right { overflow-y: scroll !important; overflow-x: hidden !important; background: #f8fafc !important; padding: 0 !important; }
-#netwiz-container, #netwiz-dev-container { display: block !important; width: 100% !important; min-height: 101vh !important; padding: 0 !important; margin: 0 auto !important; box-sizing: border-box !important; color: #64748b; font-size: 14px; }
-.nw-wrapper { display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: flex-start !important; width: 100% !important; max-width: 900px !important; margin: 0 auto !important; padding-bottom: 10vh !important; font-family: -apple-system, BlinkMacSystemFont, sans-serif; box-sizing: border-box !important; }
 
-/* 顶部统一蓝色大横幅 */
-.nw-header { display: block !important; width: 100% !important; max-width: 750px !important; margin: 0 auto 30px auto !important; text-align: center !important; background-color: #5e72e4 !important; padding: 15px !important; border-radius: 16px !important; position: relative !important; box-sizing: border-box !important; box-shadow: 0 10px 25px rgba(94, 114, 228, 0.15) !important; z-index: 20 !important; border: none !important; }
+/* 滚动条轨道 */
+html, body { overflow-y: scroll !important; }
+#maincontent, .main-right { overflow-y: scroll !important; overflow-x: hidden !important; background: #f8fafc !important; padding: 0 !important; }
+
+/* 统一最外层骨架撑开 101vh */
+#netwiz-container, #netwiz-dev-container { display: block !important; width: 100% !important; min-height: 101vh !important; padding: 0 !important; margin: 0 auto !important; box-sizing: border-box !important; color: #64748b; font-size: 14px; }
+.nw-wrapper { display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: flex-start !important; width: 100% !important; max-width: 900px !important; margin: 0 auto !important; padding-bottom: 10vh !important; font-family: -apple-system, BlinkMacSystemFont, sans-serif; box-sizing: border-box !important; min-height: 101vh !important; }
+
+/* 顶部统一大横幅 */
+.nw-header { display: block !important; width: 100% !important; max-width: 750px !important; margin: 0 auto 30px auto !important; text-align: center !important; background-color: #5e72e4 !important; padding: 25px 15px !important; border-radius: 16px !important; position: relative !important; box-sizing: border-box !important; box-shadow: 0 10px 25px rgba(94, 114, 228, 0.15) !important; z-index: 20 !important; border: none !important; }
 .nw-main-title { font-size: 35px !important; font-weight: 600 !important; margin: 0 0 10px 0 !important; color: #ffffff !important; letter-spacing: 2px !important; border: none !important; padding: 0 !important; line-height: 1.2 !important; }
 .nw-header p { color: #ffffff !important; font-size: 16px !important; opacity: 0.9 !important; margin: 10px !important; letter-spacing: 1px !important; border: none !important; }
 .nw-title-wrap { position: relative !important; display: inline-block !important; cursor: pointer !important; }
 
 /* 版本号悬浮特效 */
-.nw-version-tag { position: absolute !important; top: 15px !important; left: 100% !important; margin-left: 1px !important; background: rgba(255, 255, 255, 0.15) !important; color: #fff !important; font-size: 13px !important; font-weight: bold !important; padding: 3px 10px !important; border-radius: 8px !important; font-family: monospace !important; z-index: 50 !important; border: 1px solid rgba(255, 255, 255, 0.3) !important; white-space: nowrap !important; box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important; opacity: 0 !important; pointer-events: none !important; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important; transform: translateY(0px) !important; }
+.nw-version-tag { position: absolute !important; top: 15px !important; left: 100% !important; margin-left: 1px !important; background: rgba(255, 255, 255, 0.15) !important; color: #fff !important; font-size: 13px !important; font-weight: bold !important; padding: 3px 10px !important; border-radius: 8px !important; font-family: monospace !important; z-index: 50 !important; border: none !important; white-space: nowrap !important; box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important; opacity: 0 !important; pointer-events: none !important; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important; transform: translateY(0px) !important; }
 .nw-title-wrap:hover .nw-version-tag { opacity: 1 !important; top: -7px !important; transform: translateY(-5px) !important; }
-.nw-version-dot { position: absolute !important; top: -3px !important; right: -3px !important; width: 8px !important; height: 8px !important; background-color: #ef4444 !important; border-radius: 50% !important; box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.9) !important; display: block !important; }
+.nw-version-dot { display: none !important; }
 
 #btn-reopen-wizard { margin-top: 10px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 5px !important; cursor: pointer !important; background: rgba(255,255,255,0.15) !important; border: 1px solid rgba(255,255,255,0.2) !important; padding: 6px 18px !important; border-radius: 20px !important; font-size: 13.5px !important; font-weight: 500 !important; color: #fff !important; transition: all 0.25s ease !important; }
 #btn-reopen-wizard:hover { background: rgba(255,255,255,0.25) !important; transform: translateY(-1px) !important; box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important; }
 
-/* 移动端响应式同步 */
 @media screen and (max-width: 768px) {
   .nw-wrapper { padding-top: 3vh !important; padding-bottom: 5vh !important; }
   .nw-header { margin: -10px auto 15px !important; padding: 20px 15px !important; width: 100% !important; max-width: 320px !important; box-sizing: border-box !important; border-radius: 12px !important; }
