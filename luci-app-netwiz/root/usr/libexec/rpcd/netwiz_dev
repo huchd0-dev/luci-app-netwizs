@@ -7,30 +7,20 @@ case "$1" in
         exit 0
         ;;
     call)
+        # 获取前端传来的 JSON 参数
+        input=$(cat)
+        
         case "$2" in
             get_list)
-                # 1. 抓取无线设备 MAC (物理网卡绝对在线)
                 wifi_macs=$(for iface in $(iwinfo 2>/dev/null | grep "^wlan\|^ra\|^wl\|^ath" | awk '{print $1}'); do iwinfo $iface assoclist 2>/dev/null | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}' | tr 'A-Z' 'a-z'; done)
-                
-                # 2. 抓取邻居表 (含动态物理状态)
                 ip_neigh=$(ip neigh show dev br-lan 2>/dev/null)
-                
-                # 3. 抓取 DHCP 租约记录
                 leases=$(cat /tmp/dhcp.leases 2>/dev/null)
-                
-                # 4. 抓取当前静态绑定
                 uci_hosts=$(uci show dhcp 2>/dev/null | grep -E "^dhcp\.@host\[[0-9]+\]\.(mac|ip|name)=")
                 
-                # 5. AWK 极速融合解析 (三维探针)
                 json_data=$(awk -v wifi_str="$wifi_macs" -v neigh_str="$ip_neigh" -v lease_str="$leases" -v uci_str="$uci_hosts" '
                 BEGIN {
-                    # 解析 WiFi 绝对在线 MAC
                     split(wifi_str, warr, " "); for(i in warr) wifi_online[warr[i]]=1;
-                    
-                    # 解析 DHCP 租约
                     split(lease_str, larr, "\n"); for(i in larr) { split(larr[i], f, " "); if(f[2]!=""){ mac=tolower(f[2]); leases_ip[mac]=f[3]; if(f[4]!="*") leases_name[mac]=f[4]; } }
-                    
-                    # 解析 UCI 静态绑定
                     split(uci_str, uarr, "\n"); for(i in uarr) {
                         idx=index(uarr[i],"="); if(idx>0){
                             key=substr(uarr[i],1,idx-1); val=substr(uarr[i],idx+1); gsub(/^\047|\047$/, "", val);
@@ -43,13 +33,9 @@ case "$1" in
                             }
                         }
                     }
-                    
-                    # 解析 IP Neigh 邻居表
                     split(neigh_str, narr, "\n"); for(i in narr) { split(narr[i], f, " "); if(f[1]!="" && f[5]!=""){ mac=tolower(f[5]); neigh_ip[mac]=f[1]; neigh_state[mac]=f[6]; all_macs[mac]=1; } }
-                    
                     for(m in leases_ip) all_macs[m]=1; for(m in mac_to_idx) all_macs[m]=1;
 
-                    # 生成 JSON 输出
                     printf "{\"devices\": ["; first=1;
                     for(mac in all_macs) {
                         is_wifi=(wifi_online[mac]==1); n_state=neigh_state[mac];
@@ -68,12 +54,71 @@ case "$1" in
                 echo "$json_data"
                 exit 0
                 ;;
+                
             bind)
-                # === 预留的一键绑定逻辑，下一步补全安全写入 ===
+                # 解析前端传来的真实参数
+                mac=$(echo "$input" | jsonfilter -e '@.mac' | tr 'A-Z' 'a-z')
+                ip=$(echo "$input" | jsonfilter -e '@.ip')
+                name=$(echo "$input" | jsonfilter -e '@.name')
+                
+                # IP 格式非法
+                if ! echo "$ip" | awk -F. 'NF==4 && $1>=0 && $1<=255 && $2>=0 && $2<=255 && $3>=0 && $3<=255 && $4>=0 && $4<=255 {print "ok"}' | grep -q "ok"; then
+                    echo '{"result":1, "error":"Invalid IP Format"}'
+                    exit 1
+                fi
+                
+                # 动态防冲撞清理，删除被占用相同 IP 或相同 MAC 的旧静态规则
+                count=$(uci show dhcp | grep -c "=host" || echo 0)
+                idx=0
+                while [ $idx -lt $count ]; do
+                    exist_mac=$(uci -q get dhcp.@host[$idx].mac | tr 'A-Z' 'a-z' || true)
+                    exist_ip=$(uci -q get dhcp.@host[$idx].ip || true)
+                    
+                    if echo " $exist_mac " | grep -q -i " $mac " || [ "$exist_ip" = "$ip" ]; then
+                        uci delete dhcp.@host[$idx]
+                        count=$((count - 1)) # 删除后数组塌陷，当前索引变成下一个，无需 idx+1
+                    else
+                        idx=$((idx + 1))
+                    fi
+                done
+                
+                # 写入新规则
+                uci add dhcp host >/dev/null
+                uci set dhcp.@host[-1].mac="$mac"
+                uci set dhcp.@host[-1].ip="$ip"
+                [ -n "$name" ] && [ "$name" != "Unknown" ] && uci set dhcp.@host[-1].name="$name"
+                
+                # 保存并使用 reload
+                uci commit dhcp
+                /etc/init.d/dnsmasq reload >/dev/null 2>&1
+                
+                echo '{"result":0}'
                 exit 0
                 ;;
+                
             unbind)
-                # === 预留的解绑逻辑，下一步补全 ===
+                mac=$(echo "$input" | jsonfilter -e '@.mac' | tr 'A-Z' 'a-z')
+                deleted=0
+                
+                count=$(uci show dhcp | grep -c "=host" || echo 0)
+                idx=0
+                while [ $idx -lt $count ]; do
+                    exist_mac=$(uci -q get dhcp.@host[$idx].mac | tr 'A-Z' 'a-z' || true)
+                    if echo " $exist_mac " | grep -q -i " $mac "; then
+                        uci delete dhcp.@host[$idx]
+                        count=$((count - 1))
+                        deleted=1
+                    else
+                        idx=$((idx + 1))
+                    fi
+                done
+                
+                if [ "$deleted" = "1" ]; then
+                    uci commit dhcp
+                    /etc/init.d/dnsmasq reload >/dev/null 2>&1
+                fi
+                
+                echo '{"result":0}'
                 exit 0
                 ;;
         esac
