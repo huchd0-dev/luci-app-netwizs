@@ -28,96 +28,32 @@ return view.extend({
 
         var htmlTemplate = [
             '<link rel="stylesheet" type="text/css" href="' + L.resource('view/netwiz.css') + '?v=' + Date.now() + '">',
-
             '<style>',
-            '.nd-control-bar { display: flex; align-items: center; justify-content: space-between; width: 100%; max-width: 860px; margin: 0 auto 25px auto; background: #6366f1; padding: 15px 25px; border-radius: 16px; color: #fff; box-shadow: 0 6px 20px rgba(99, 102, 241, 0.2); box-sizing: border-box; }',
-            '.nd-cb-back { width: 40px; height: 40px; background: rgba(255,255,255,0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; flex-shrink: 0; }',
-            '.nd-cb-back:hover { background: rgba(255,255,255,0.3); transform: translateX(-3px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }',
-            '.nd-cb-title-wrap { flex: 1; margin: 0 20px; text-align: left; }',
-            '.nd-cb-title { font-size: 19px; font-weight: bold; line-height: 1.2; margin-bottom: 4px; color: #fff !important; border: none !important; padding: 0 !important; }',
-            '.nd-cb-sub { font-size: 13.5px; opacity: 0.85; margin: 0 !important; }',
-            '.nd-cb-refresh { padding: 8px 16px; background: transparent; border: 1px solid rgba(255,255,255,0.3); border-radius: 10px; font-size: 14px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: 0.2s; flex-shrink: 0; }',
-            '.nd-cb-refresh:hover { background: rgba(255,255,255,0.15); }',
-            '.nd-refresh-icon { transition: transform 0.8s ease; }',
-
-            '.nd-list { display: flex; flex-direction: column; gap: 15px; width: 100%; max-width: 860px; margin: 0 auto; padding: 0; }',
-            '.nd-card { display: flex; align-items: center; justify-content: space-between; background: #fff; padding: 22px 25px; border-radius: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); border: 1px dashed #cbd5e1; transition: all 0.2s ease; gap: 15px; box-sizing: border-box; }',
-            '.nd-card:hover { box-shadow: 0 8px 25px rgba(0,0,0,0.06); transform: translateY(-2px); border-color: #3b82f6; }',
-            
-            '.nd-card-left { flex: 2; min-width: 200px; display: flex; flex-direction: column; gap: 8px; }',
-            '.nd-card-name { font-size: 16px; font-weight: 600; color: #334155; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }',
-            '.nd-card-mac { font-size: 13px; font-family: monospace; color: #64748b; background: #f8fafc; padding: 3px 8px; border-radius: 6px; width: fit-content; border: 1px dashed #cbd5e1; letter-spacing: 0.5px; }',
-            
-            '.nd-card-mid { flex: 1.2; min-width: 150px; display: flex; flex-direction: column; gap: 5px; align-items: flex-start; }',
-            '.nd-card-ip { font-size: 16.5px; font-weight: bold; color: #3b82f6; font-family: monospace; letter-spacing: 0.5px; }',
-            '.nd-lease-info { font-size: 12px; color: #94a3b8; font-family: monospace; letter-spacing: 0.5px; display: flex; align-items: center; gap: 4px; }',
-
-            '.nd-status-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px; border-radius: 4px; font-size: 11.5px; font-weight: bold; margin-left: 2px; }',
-            '.nd-status-online { background: #d1fae5; color: #059669; }',
-            '.nd-status-offline { background: #f1f5f9; color: #64748b; }',
-            '.nd-dot-online { width: 6px; height: 6px; background: #10b981; border-radius: 50%; box-shadow: 0 0 6px #10b981; }',
-            '.nd-dot-offline { width: 6px; height: 6px; background: #94a3b8; border-radius: 50%; }',
-            
-            '.nd-badge { padding: 2px 6px; border-radius: 4px; font-size: 11.5px; border: 1px solid transparent; white-space: nowrap; margin-left: 4px; font-weight: bold; }',
-            '.nd-badge-static { background: #e0f2fe; color: #0284c7; border-color: #bae6fd; }',
-            '.nd-badge-gw { background: #fef08a; color: #854d0e; border-color: #fde047; }',
-            '.nd-badge-local { background: #e0e7ff; color: #3730a3; border-color: #c7d2fe; }',
-            
-            '.nd-card-right { flex: 0 0 auto; display: flex; justify-content: flex-end; gap: 12px; }',
-            '.nd-btn { appearance: none; border: none; padding: 10px 20px; border-radius: 8px; font-size: 14.5px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; font-family: inherit; }',
-            '.nd-btn-green { background: #10b981; color: #fff; }',
-            '.nd-btn-green:hover { background: #059669; box-shadow: 0 4px 12px rgba(16,185,129,0.3); transform: translateY(-1px); }',
-            '.nd-btn-blue { background: #3b82f6; color: #fff; }',
-            '.nd-btn-blue:hover { background: #2563eb; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(59,130,246,0.3); }',
-            '.nd-btn-red { background: #fee2e2; color: #ef4444; }',
-            '.nd-btn-red:hover { background: #fca5a5; color: #b91c1c; }',
-            '.nd-btn-gray { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }',
-            '.nd-btn-gray:hover { background: #e2e8f0; color: #0f172a; }',
-
-            '#nd-modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.65); z-index:2000000; align-items:center; justify-content:center; backdrop-filter: blur(4px); }',
-            '.nd-modal-box { background:#fff; width:90%; max-width:420px; border-radius:16px; padding:30px; box-sizing:border-box; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.4); text-align:center; animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); }',
-            '.nd-modal-title { font-size:22px; color:#0f172a; margin:0 0 15px 0 !important; font-weight:600; border: none !important; }',
-            '.nd-input-group { text-align: left; margin-bottom: 18px; }',
-            '.nd-input-label { display: block; font-size: 14px; color: #64748b; margin-bottom: 8px; font-weight: bold; }',
-            '.nd-input { width: 100%; padding: 14px 16px; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; outline: none; font-size: 15px; background: #f8fafc; transition: all 0.2s; font-family: inherit; }',
-            '.nd-input:focus { border-color: #3b82f6; background: #fff; box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }',
-            '.nd-empty { text-align: center; padding: 60px 20px; color: #64748b; font-size: 15px; background: #fff; border-radius: 16px; border: 1px dashed #cbd5e1; width: 100%; box-sizing: border-box; margin-top: 15px; }',
-            '.nd-spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid #6366f1; border-radius: 50%; animation: nd-spin 1s linear infinite; }',
-            '@keyframes nd-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }',
-            '@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }',
-
-            '@media screen and (max-width: 768px) {',
-            '  .nd-control-bar { padding: 15px; border-radius: 12px; max-width: 320px; margin: 0 auto 15px auto; flex-wrap: wrap; gap: 10px; }',
-            '  .nd-cb-back { width: 36px; height: 36px; }',
-            '  .nd-cb-title-wrap { margin: 0 10px; }',
-            '  .nd-cb-title { font-size: 16px !important; }',
-            '  .nd-cb-sub { display: none; }',
-            '  .nd-card { flex-direction: column; align-items: flex-start; padding: 18px 15px; gap: 12px; max-width: 320px; margin: 0 auto; }',
-            '  .nd-card-left, .nd-card-mid, .nd-card-right { width: 100%; }',
-            '  .nd-card-right { justify-content: flex-start; margin-top: 5px; flex-wrap: wrap; }',
-            '  .nd-btn { flex: 1; text-align: center; }',
-            '}',
+            '  .nd-cb-back svg { width: 22px; height: 22px; }',
+            '  .nd-cb-refresh svg { width: 15px; height: 15px; }',
+            '  .nd-card-name svg { width: 18px; height: 18px; margin-right: 2px; vertical-align: sub; }',
+            '  .nd-lease-info svg { width: 12px; height: 12px; margin-right: 2px; vertical-align: baseline; }',
+            '  .btn-bind svg { width: 15px; height: 15px; margin-right: 4px; vertical-align: sub; }',
             '</style>',
-
             '<div class="nw-wrapper">',
             '   <div class="nw-header">',
             '      <div class="nw-title-wrap">',
             '         <div class="nw-main-title">Netwiz 网络设置向导</div>',
-            '         <div class="nw-version-tag">v1.4.0</div>',
+            '         <div class="nw-version-tag">v1.4.0 <div class="nw-version-dot" style="display: none;"></div></div>',
             '      </div>',
             '      <p>纯粹 · 安全 · 无损的极简配置</p>',
             '   </div>',
 
             '   <div class="nd-control-bar">',
             '      <div class="nd-cb-back" id="dev-back" title="返回主界面">',
-            '         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>',
+            '         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>',
             '      </div>',
             '      <div class="nd-cb-title-wrap">',
             '          <div class="nd-cb-title">设备网络管家</div>',
             '          <p class="nd-cb-sub">终端设备状态监控与固定 IP 管理</p>',
             '      </div>',
             '      <div class="nd-cb-refresh" id="dev-refresh" title="重新扫描网络">',
-            '         <svg class="nd-refresh-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 2v6h-6"></path><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path></svg> 刷新',
+            '         <svg class="nd-refresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 2v6h-6"></path><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path></svg> 刷新',
             '      </div>',
             '   </div>',
 
@@ -193,47 +129,51 @@ return view.extend({
             listEl.style.display = 'none';
             
             callDeviceList().then(function(res) {
-                // ==========================================
-                // 前端调试：打印后端发来的数据
-                console.log("================ Netwiz Debug ================");
-                console.log("后端传来的原始数据: ", res);
-                // ==========================================
-
                 loadingEl.style.display = 'none';
                 listEl.style.display = 'flex';
                 
                 var devices = (res && Array.isArray(res.devices)) ? res.devices : [];
                 
-                // 排序：网关优先 -> 本机优先 -> 静态优先 -> 在线优先
                 devices.sort(function(a, b) {
-                    if (a.is_gw !== b.is_gw) return (a.is_gw === 'true') ? -1 : 1;
-                    if (a.is_local !== b.is_local) return (a.is_local === 'true') ? -1 : 1;
-                    if (a.is_static !== b.is_static) return (a.is_static === 'true') ? -1 : 1;
-                    if (a.online !== b.online) return (a.online === 'true' || a.online === true) ? -1 : 1;
+                    var aGw = (a.is_gw === true || a.is_gw === 'true');
+                    var bGw = (b.is_gw === true || b.is_gw === 'true');
+                    var aLocal = (a.is_local === true || a.is_local === 'true');
+                    var bLocal = (b.is_local === true || b.is_local === 'true');
+                    var aStatic = (a.is_static === true || a.is_static === 'true');
+                    var bStatic = (b.is_static === true || b.is_static === 'true');
+                    var aOnline = (a.online === true || a.online === 'true');
+                    var bOnline = (b.online === true || b.online === 'true');
+
+                    if (aGw !== bGw) return aGw ? -1 : 1;
+                    if (aLocal !== bLocal) return aLocal ? -1 : 1;
+                    if (aStatic !== bStatic) return aStatic ? -1 : 1;
+                    if (aOnline !== bOnline) return aOnline ? -1 : 1;
                     return a.ip.localeCompare(b.ip, undefined, {numeric: true, sensitivity: 'base'});
                 });
 
                 if (devices.length === 0) {
-                    listEl.innerHTML = '<div class="nd-empty">当前局域网内未发现任何设备记录</div>';
+                    listEl.innerHTML = '<div style="text-align:center; padding:60px 20px; color:#64748b; background:#fff; border-radius:16px; border:1px dashed #cbd5e1; width:100%;">当前局域网内未发现任何设备记录</div>';
                     return;
                 }
 
                 var html = "";
                 devices.forEach(function(dev) {
-                    var isOnline = dev.online === true || dev.online === 'true';
-                    var isStatic = dev.is_static === true || dev.is_static === 'true';
+                    var isOnline = (dev.online === true || dev.online === 'true');
+                    var isStatic = (dev.is_static === true || dev.is_static === 'true');
+                    var isGw = (dev.is_gw === true || dev.is_gw === 'true');
+                    var isLocal = (dev.is_local === true || dev.is_local === 'true');
                     
                     var statusBadgesHtml = isOnline 
                         ? '<span class="nd-status-badge nd-status-online"><span class="nd-dot-online"></span>在线</span>' 
                         : '<span class="nd-status-badge nd-status-offline"><span class="nd-dot-offline"></span>离线</span>';
                         
                     if (isStatic) statusBadgesHtml += '<span class="nd-badge nd-badge-static">🔒 静态</span>';
-                    if (dev.is_gw === 'true') statusBadgesHtml += '<span class="nd-badge nd-badge-gw">🌐 上级网关</span>';
-                    if (dev.is_local === 'true') statusBadgesHtml += '<span class="nd-badge nd-badge-local">💻 本机系统</span>';
+                    if (isGw) statusBadgesHtml += '<span class="nd-badge nd-badge-gw">🌐 上级网关</span>';
+                    if (isLocal) statusBadgesHtml += '<span class="nd-badge nd-badge-local">💻 本机系统</span>';
 
                     var leaseText = dev.lease || '-';
                     if (isStatic && leaseText === '-') leaseText = '静态分配 (Static)';
-                    if (dev.is_gw === 'true') leaseText = '系统网关路由';
+                    if (isGw) leaseText = '系统网关路由';
 
                     var actions = "";
                     if (isStatic) {
