@@ -15,19 +15,17 @@ case "$1" in
                 hosts_str=$(cat /tmp/hosts/* /etc/hosts 2>/dev/null || true)
                 uci_hosts=$(uci show dhcp 2>/dev/null | grep "\.@host\[" || true)
 
-                # ★ 核心修复：直接拿完整多行 ubus JSON，不使用 grep 破坏结构
                 ubus_leases=$(ubus call dhcp ipv4leases 2>/dev/null || ubus call odhcpd ipv4leases 2>/dev/null || true)
 
-                # ★ 严格提取网关与本机IP（彻底剔除 /24 子网掩码和换行符）
                 gw_ip=$(ip -4 route show default 2>/dev/null | awk '/default/ {print $3}' | head -n1 | tr -d ' \r\n')
                 lan_ip=$(ip addr show br-lan 2>/dev/null | awk '/inet / {print $2}' | cut -d/ -f1 | head -n1 | tr -d ' \r\n')
                 [ -z "$lan_ip" ] && lan_ip=$(uci -q get network.lan.ipaddr | cut -d/ -f1 | tr -d ' \r\n')
 
-                # ★ 获取精确的当前 Unix 时间戳，绕过 Busybox awk 不支持 systime() 的限制
                 curr_time=$(date +%s)
 
                 json_data=$(awk -v current_time="$curr_time" -v wifi_str="$wifi_macs" -v arp_str="$arp_cache" -v lease_str="$leases" -v hosts_str="$hosts_str" -v ubus_str="$ubus_leases" -v uci_str="$uci_hosts" -v gw_ip="$gw_ip" -v lan_ip="$lan_ip" '
                 BEGIN {
+                    curr_time_num = current_time + 0;
                     gsub(/^[ \t\r\n]+|[ \t\r\n]+$/, "", gw_ip);
                     gsub(/^[ \t\r\n]+|[ \t\r\n]+$/, "", lan_ip);
 
@@ -51,7 +49,6 @@ case "$1" in
                         }
                     }
 
-                    # ★ 暴力解构多行 UBUS JSON (完美解析带空格名字与租约剩余时间)
                     split(ubus_str, ulines, "\n");
                     cur_mac = ""; cur_ip = ""; cur_name = ""; cur_valid = -1;
                     for(i=1; i<=length(ulines); i++) {
@@ -59,14 +56,24 @@ case "$1" in
                         if (line ~ /"mac":/) { split(line, p, "\""); cur_mac = tolower(p[4]); }
                         else if (line ~ /"ip":/) { split(line, p, "\""); cur_ip = p[4]; }
                         else if (line ~ /"hostname":/) { split(line, p, "\""); cur_name = p[4]; }
-                        else if (line ~ /"valid":/) { split(line, p, ":"); val=p[2]; gsub(/[^0-9]/, "", val); cur_valid = val + 0; }
+                        else if (line ~ /"valid":/ || line ~ /"expires":/ || line ~ /"leasetime":/) { 
+                            split(line, p, ":"); val=p[2]; gsub(/[^0-9]/, "", val); val = val + 0; 
+                            if (val > 1000000000) {
+                                if (val > curr_time_num) cur_valid = val - curr_time_num;
+                                else cur_valid = 0;
+                            } else {
+                                cur_valid = val;
+                            }
+                        }
                         else if (line ~ /}/) {
                             if (cur_mac != "") {
                                 if (cur_ip != "") leases_ip[cur_mac] = cur_ip;
-                                if (cur_name != "") ubus_name[cur_mac] = cur_name;
+                                if (cur_name != "" && cur_name != "*" && cur_name != "?") ubus_name[cur_mac] = cur_name;
                                 if (cur_valid > 0) {
                                     h = int(cur_valid / 3600); m = int((cur_valid % 3600) / 60); s = cur_valid % 60;
                                     leases_time[cur_mac] = sprintf("%dh %dm %ds", h, m, s);
+                                } else if (cur_valid == 0) {
+                                    leases_time[cur_mac] = "已过期 (Expired)";
                                 }
                                 all_macs[cur_mac] = 1;
                             }
@@ -74,25 +81,30 @@ case "$1" in
                         }
                     }
 
-                    # 解析传统租约文件
                     split(lease_str, larr, "\n");
                     for(i in larr) {
                         split(larr[i], f, " ");
                         if(length(f) >= 4 && f[2]!="") { 
-                            mac=tolower(f[2]); 
+                            mac=tolower(f[2]);
                             if(f[3]!="") leases_ip[mac]=f[3]; 
                             
-                            # 提取可能带有空格的名字
                             name = f[4];
                             for(k=5; k<=length(f)-1; k++) { name = name " " f[k]; }
-                            if(name!="" && name!="*") leases_name[mac]=name; 
+                            if(name!="" && name!="*" && name!="?") leases_name[mac]=name;
                             all_macs[mac]=1; 
                             
-                            # 传统文件的租约时间计算
                             exp_time = f[1] + 0;
                             if (leases_time[mac] == "") {
-                                if (exp_time > current_time) {
-                                    left = exp_time - current_time;
+                                if (exp_time > 1000000000) {
+                                    if (exp_time > curr_time_num) {
+                                        left = exp_time - curr_time_num;
+                                        h = int(left / 3600); m = int((left % 3600) / 60); s = left % 60;
+                                        leases_time[mac] = sprintf("%dh %dm %ds", h, m, s);
+                                    } else {
+                                        leases_time[mac] = "已过期 (Expired)";
+                                    }
+                                } else if (exp_time > 0 && exp_time <= 1000000000) {
+                                    left = exp_time;
                                     h = int(left / 3600); m = int((left % 3600) / 60); s = left % 60;
                                     leases_time[mac] = sprintf("%dh %dm %ds", h, m, s);
                                 } else if (exp_time == 0) {
@@ -107,19 +119,23 @@ case "$1" in
                         split(harr[i], f, " ");
                         if(f[1]!="" && f[2]!="") {
                             if (f[1] ~ /^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$/) {
-                                name = f[2]; sub(/\.lan$/, "", name);
-                                if (name != "localhost" && name != "*") ip_to_name[f[1]] = name;
+                                name = f[2];
+                                sub(/\.lan$/, "", name);
+                                if (name != "localhost" && name != "*" && name != "?") ip_to_name[f[1]] = name;
                             }
                         }
                     }
 
                     split(uci_str, uarr, "\n");
                     for(i in uarr) {
-                        idx=index(uarr[i],"="); if(idx>0) {
-                            key=substr(uarr[i],1,idx-1); val=substr(uarr[i],idx+1); gsub(/^\047|\047$/, "", val);
+                        idx=index(uarr[i],"=");
+                        if(idx>0) {
+                            key=substr(uarr[i],1,idx-1);
+                            val=substr(uarr[i],idx+1); gsub(/^\047|\047$/, "", val);
                             split(key, kp, ".");
                             if(kp[1]=="dhcp" && kp[2]!="" && kp[3]!="") {
-                                h_idx=kp[2]; prop=kp[3];
+                                h_idx=kp[2];
+                                prop=kp[3];
                                 if(prop=="mac"){
                                     gsub(/["\r\n]/, "", val);
                                     split(tolower(val), mparts, " "); 
@@ -142,7 +158,8 @@ case "$1" in
                         }
                     }
 
-                    printf "{\"devices\": ["; first=1;
+                    printf "{\"devices\": [";
+                    first=1;
                     for(mac in all_macs) {
                         is_online = (arp_online[mac]==1 || wifi_online[mac]==1) ? 1 : 0;
                         ip = arp_ip[mac]; 
@@ -160,8 +177,18 @@ case "$1" in
                         if(name=="") name = "Unknown";
                         
                         l_time = leases_time[mac];
-                        if(l_time=="") l_time = "-";
                         
+                        # ★ 智能判断“未知设备/无租约”的真实情况
+                        if(l_time=="") {
+                            if (is_static_mac[mac]==1) {
+                                l_time = "静态分配 (Static)";
+                            } else if (arp_online[mac]==1) {
+                                l_time = "终端采用静态 IP 接入";
+                            } else {
+                                l_time = "-";
+                            }
+                        }
+
                         gsub(/["\\\r\n\t]/, "", mac); gsub(/["\\\r\n\t]/, "", ip); gsub(/["\\\r\n\t]/, "", name);
                         
                         is_static = (is_static_mac[mac]==1) ? "true" : "false";
